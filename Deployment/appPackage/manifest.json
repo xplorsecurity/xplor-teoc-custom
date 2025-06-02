@@ -1,0 +1,62 @@
+{
+  "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.15/MicrosoftTeams.schema.json",
+  "manifestVersion": "1.15",
+  "version": "3.4.0",
+  "id": "fe9c2269-ba3f-47d8-89a5-387916a0b65b",
+  "packageName": "com.microsoft.teams.extension",
+  "developer": {
+    "name": "XplorSecurity",
+    "websiteUrl": "https://aka.ms/teamsapptemplates",
+    "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+    "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
+  },
+  "icons": {
+    "color": "resources/color.png",
+    "outline": "resources/outline.png"
+  },
+  "name": {
+    "short": "xSIRC",
+    "full": "Xplor Security Incident Response Centre"
+  },
+  "description": {
+    "short": "Xplor Security Incident Response Centre",
+    "full": "xSIRC - used by Xplor Security (CTIR) for Security Incidents"
+  },
+  "accentColor": "#FFFFFF",
+  "bots": [],
+  "composeExtensions": [],
+  "configurableTabs": [
+    {
+      "configurationUrl": "https://app-sis/index.html#/config",
+      "canUpdateConfiguration": true,
+      "scopes": [
+        "team",
+        "groupchat"
+      ]
+    }
+  ],
+  "staticTabs": [
+    {
+      "entityId": "index",
+      "name": "xSIRC",
+      "contentUrl": "https://c5c5-103-127-176-150.ngrok-free.app/index.html#/tab",
+      "websiteUrl": "https://csiroc.sharepoint.com/sites/securityincident",
+      "scopes": [
+        "personal"
+      ]
+    }
+  ],
+  "permissions": [
+    "identity",
+    "messageTeamMembers"
+  ],
+  "validDomains": [
+    "bsn-sis.azurewebsites.net",
+    "c5c5-103-127-176-150.ngrok-free.app" ,
+    "localhost"
+  ],
+  "webApplicationInfo": {
+    "id": "b155ce70-a3cc-4658-bdcd-5573014bec0a",
+    "resource":"https://c5c5-103-127-176-150.ngrok-free.app" // "api://bsn-sis.azurewebsites.net/b155ce70-a3cc-4658-bdcd-5573014bec0a" //
+  }
+}

@@ -1,0 +1,17 @@
+--- Deployment/appPackage/manifest.json	2025-05-28 15:42:14.813592100 +0100
++++ Deployment/appPackage/manifest.json	2025-05-28 15:57:28.445306300 +0100
+@@ -1,11 +1,11 @@
+ {
+   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.15/MicrosoftTeams.schema.json",
+   "manifestVersion": "1.15",
+-  "version": "3.2.0",
+-  "id": "bef61400-db9b-41d4-a617-403deb7bbe77",
++  "version": "3.2.1",
++  "id": "b155ce70-a3cc-4658-bdcd-5573014bec0a",
+   "packageName": "com.microsoft.teams.extension",
+   "developer": {
+-    "name": "Teams Customer Advocacy Group",
++    "name": "CIEOC",
+     "websiteUrl": "https://aka.ms/teamsapptemplates",
+     "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
+     "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"

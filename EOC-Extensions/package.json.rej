@@ -1,0 +1,12 @@
+--- EOC-Extensions/package.json	2025-05-28 15:42:16.533070900 +0100
++++ EOC-Extensions/package.json	2025-05-28 15:57:31.195545300 +0100
+@@ -56,7 +56,7 @@
+     "@microsoft/sp-module-interfaces": "1.13.0",
+     "@microsoft/sp-tslint-rules": "1.13.0",
+     "@types/webpack-env": "1.13.1",
+-    "gulp": "~4.0.2",
+-    "cssnano": "5.1.15"
++    "cssnano": "5.1.15",
++    "gulp": "~4.0.2"
+   }
+ }

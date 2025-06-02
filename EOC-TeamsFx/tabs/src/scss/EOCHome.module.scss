@@ -1,0 +1,181 @@
+:global {
+    div[class~="info-callout"] {
+        width: 620px;
+        max-width: 90%;
+        padding: 20px 24px;
+        font-family: 'Segoe UI';
+        z-index: 10;
+
+        h2[class~="info-title"],
+        span[class~="info-title"] {
+            margin-bottom: 6px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        span[class~="info-titlebody"] {
+            margin-bottom: 6px;
+            display: block;
+            font-size: 12px;
+        }
+
+        span[class~="info-titlecontent"] {
+            display: block;
+            font-size: 12px;
+        }
+
+        span[class~="info-titlelink"] {
+            font-weight: bold;
+        }
+
+        a[class~="info-link"] {
+            display: block;
+            margin-bottom: 12px;
+            color: var(--colorBrandForegroundLinkHover);
+        }
+    }
+
+    div.message-bar {
+        div.ms-MessageBar-content {
+            padding-left: 0;
+            padding-right: 0;
+            align-items: center;
+
+            span {
+                font: normal normal normal 16px/21px Segoe UI;
+            }
+
+            i {
+                font-size: 20px;
+                margin-top: 1px;
+            }
+
+            i[data-icon-name="Clear"] {
+                font-size: 15px;
+                margin-top: 5px;
+            }
+        }
+    }
+
+    .loaderAlign {
+        height: 100%;
+    }
+}
+
+div[class~="eoc-header"] {
+    width: 100%;
+    height: auto;
+    max-height: 100vh;
+    background: #464775 0% 0% no-repeat padding-box;
+    opacity: 1;
+    padding: 19px 41px;
+
+    img[class="ms-logo"] {
+        width: 32px;
+        height: 32px;
+    }
+
+    h1[class="header-text"] {
+        text-align: left;
+        font: normal normal bold 24px/32px Segoe UI;
+        letter-spacing: 0px;
+        color: var(--colorBrandBackgroundInverted);
+    }
+
+    svg[class~="header-icon"] {
+        color: var(--colorNeutralForegroundStaticInverted);
+    }
+
+    svg[class~="header-icon"]:focus-visible {
+        outline: 2px auto var(--colorNeutralForegroundInvertedLink);
+        border-radius: 3px;
+        outline-offset: 3px;
+    }
+
+    svg[class~="header-icon"]:hover {
+        color: var(--colorBrandForegroundLink);
+    }
+}
+
+
+div[class~="sub-header"] {
+    opacity: 1;
+    background-color: #464775;
+    height: 69px;
+    min-width: 100%;
+    padding-top: 18px;
+    background-image: url('../assets/Images/BannerImageDefault.svg');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+
+    h2[id="sub-heading"] {
+        text-align: left;
+        font: normal normal 400 24px/32px Segoe UI;
+        letter-spacing: 0px;
+        color: var(--colorBrandBackgroundInverted);
+        opacity: 1;
+    }
+}
+
+div[class~="sub-header-dark"] {
+    background-color: var(--colorNeutralBackground1);
+    background-image: url('../assets/Images/BannerImageDark.svg');
+}
+
+div[class~="sub-header-contrast"] {
+    background-color: var(--colorNeutralBackground1);
+    background-image: url('../assets/Images/BannerImageContrast.svg');
+}
+
+div[role="tooltip"]>div {
+    background-color: #ffffff;
+    color: #000000;
+}
+
+div[class="loginButton"] {
+    margin: 5%;
+    text-align: center;
+}
+
+//For Mobile View
+@media screen and (max-width:375pt) {
+    div[class~="eoc-header"] {
+        padding: 9pt 10pt;
+
+        img[class="ms-logo"] {
+            width: 18pt;
+            height: 18pt;
+        }
+
+        h1[class="header-text"] {
+            font: normal normal bold 0.836rem/1.1704rem Segoe UI;
+        }
+
+        img[class="header-icon"],
+        img[class="feedback-icon"] {
+            width: 12pt;
+            height: 11.6pt;
+        }
+
+        img[class="feedback-icon"] {
+            position: relative;
+            bottom: 1px;
+        }
+    }
+
+    div[class="sub-header"] {
+        height: 33.54pt;
+        background-position: center right;
+        padding-top: 9pt;
+
+        div[id="sub-heading"] {
+            font: normal normal bold 1.0032rem/1.3376rem Segoe UI;
+        }
+    }
+}
+
+//accessibility fixes for color contrast
+div[class~="eoc-header-darkcontrast"] {
+    background: var(--colorNeutralBackground1);
+}
