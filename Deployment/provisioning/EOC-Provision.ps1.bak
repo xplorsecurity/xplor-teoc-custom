@@ -1,12 +1,8 @@
-﻿param([string]$AdminEmail,
+param([string]$AdminEmail,
     [string]$TenantName,
     [string]$SiteName,
     [string]$ClientID)
 
-$FilePath = Read-Host "Enter site template XML schema file path";
-$FilePath = $FilePath.Trim();
-
-Write-Host $FilePath
 
 if (($TenantName -eq "") -or ($null -eq $TenantName)) {
     $TenantName = Read-Host "Enter tenant name: (contoso)";
@@ -39,7 +35,7 @@ else {
     Write-Host "PnP.PowerShell module found"
 }
 
-$TenantURL = "https://$TenantName.sharepoint.com"
+$TenantURL = "https://xplortech.sharepoint.com"
 $EOCSiteURL = "/sites/$SiteURL"
 
 Connect-PnPOnline -Url $TenantURL -Interactive -ClientId $ClientID
@@ -75,27 +71,8 @@ try {
     Connect-PnPOnline -Url $TenantURL$EOCSiteURL -Interactive -ClientId $ClientID
 
     Write-Host "Creating lists in $SiteName site"
-	
-	$RetryCount = 0
-While ($RetryCount -lt 5) {
-	Try {
-		Write-Output "Applying site template to new SharePoint site. Attempt: $($RetryCount + 1)"
-		$OutTemplate = Invoke-PnPSiteTemplate -Path $FilePath -ClearNavigation
-		Write-Output "Successfully applied the site template."
 
-		Break
-	}
-	Catch {
-		If ($_.Exception.Message -eq "Value does not fall within the expected range." -and $RetryCount -le 5) {
-			$RetryCount++
-			Write-Output "Error encountered: $($_.Exception.Message)"
-			$RetryDelayInSeconds = ($RetryCount + 1) * 30
-			Write-Output "Retrying in $($RetryDelayInSeconds) seconds... ($RetryCount/5)"
-			Start-Sleep -Seconds $RetryDelayInSeconds
-		}
-		Else { throw $_ }
-	}
-}       
+    Invoke-PnPSiteTemplate -Path $FilePath -ErrorAction Stop -WarningAction SilentlyContinue
           
     Write-Host "App Provision complete."
     pause
