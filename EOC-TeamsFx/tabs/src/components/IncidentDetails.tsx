@@ -110,10 +110,7 @@ export interface IIncidentDetailsState {
     secIncCommanderLeadInEditModeHasRegexError: boolean;
     roleAddSuccessMessage: string;
     selectedLocation: any;
-        isViewIncidentProduct: boolean; //Incident Product 
-    isViewIncidentMitreTactic: boolean; //Incident Mitre Tactic
-    isViewIncidentRisk: boolean; //Incident Risk
-toggleDefaultTasks: boolean;
+    toggleDefaultTasks: boolean;
 }
 
 // sets the initial values for required fields validation object
@@ -202,20 +199,14 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             secIncCommanderLeadInEditModeHasRegexError: false,
             roleAddSuccessMessage: "",
             selectedLocation: "",
-                isViewIncidentProduct: false, //Incident Product 
-    isViewIncidentMitreTactic: false, //Incident Mitre Tactic
-    isViewIncidentRisk: false, //Incident Risk
-toggleDefaultTasks: false
+            toggleDefaultTasks: false
         };
         this.onRoleChange = this.onRoleChange.bind(this);
         this.onTextInputChange = this.onTextInputChange.bind(this);
         this.handleIncCommanderChange = this.handleIncCommanderChange.bind(this);
         this.onAddNewRoleChange = this.onAddNewRoleChange.bind(this);
         this.onIncidentTypeChange = this.onIncidentTypeChange.bind(this);
-                this.onIncidentProductChange = this.onIncidentProductChange.bind(this);
-        this.onIncidentMitreTacticChange = this.onIncidentMitreTacticChange.bind(this);
-        this.onIncidentRiskChange = this.onIncidentRiskChange.bind(this);
-this.onIncidentStatusChange = this.onIncidentStatusChange.bind(this);
+        this.onIncidentStatusChange = this.onIncidentStatusChange.bind(this);
 
         // localized messages for people pickers
         LocalizationHelper.strings = {

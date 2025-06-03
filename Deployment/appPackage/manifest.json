@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.15/MicrosoftTeams.schema.json",
   "manifestVersion": "1.15",
   "version": "3.4.0",
-  "id": "fe9c2269-ba3f-47d8-89a5-387916a0b65b",
+  "id": "eec90894-245b-4f09-9eee-02744ae2acff",
   "packageName": "com.microsoft.teams.extension",
   "developer": {
-    "name": "XplorSecurity",
+    "name": "Xplor Security",
     "websiteUrl": "https://aka.ms/teamsapptemplates",
     "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
     "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
@@ -20,14 +20,14 @@
   },
   "description": {
     "short": "Xplor Security Incident Response Centre",
-    "full": "xSIRC - used by Xplor Security (CTIR) for Security Incidents"
+    "full": "xSIRC - used by Xplor Security (CTIR) for Security Incidents."
   },
   "accentColor": "#FFFFFF",
   "bots": [],
   "composeExtensions": [],
   "configurableTabs": [
     {
-      "configurationUrl": "https://app-sis/index.html#/config",
+      "configurationUrl": "https://xsirctr.azurewebsites.net/index.html#/config",
       "canUpdateConfiguration": true,
       "scopes": [
         "team",
@@ -39,8 +39,8 @@
     {
       "entityId": "index",
       "name": "xSIRC",
-      "contentUrl": "https://c5c5-103-127-176-150.ngrok-free.app/index.html#/tab",
-      "websiteUrl": "https://csiroc.sharepoint.com/sites/securityincident",
+      "contentUrl": "https://xsirctr.azurewebsites.net/index.html#/tab",
+      "websiteUrl": "https://y7xvg.sharepoint.com/sites/xSIR_TEOC",
       "scopes": [
         "personal"
       ]
@@ -51,12 +51,10 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "bsn-sis.azurewebsites.net",
-    "c5c5-103-127-176-150.ngrok-free.app" ,
-    "localhost"
+    "xsirctr.azurewebsites.net"
   ],
   "webApplicationInfo": {
-    "id": "b155ce70-a3cc-4658-bdcd-5573014bec0a",
-    "resource":"https://c5c5-103-127-176-150.ngrok-free.app" // "api://bsn-sis.azurewebsites.net/b155ce70-a3cc-4658-bdcd-5573014bec0a" //
+    "id": "a612b9c1-b347-4f0c-89a8-7bdf4eec3fa8",
+    "resource": "api://xsirctr.azurewebsites.net/a612b9c1-b347-4f0c-89a8-7bdf4eec3fa8"
   }
 }

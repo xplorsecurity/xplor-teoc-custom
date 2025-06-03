@@ -15,11 +15,11 @@
     "strictNullChecks": false,
     "noUnusedLocals": false,
     "typeRoots": [
-      "../node_modules/@types",
-      "../node_modules/@microsoft"
+      "./node_modules/@types",
+      "./node_modules/@microsoft"
     ],
     "types": [
-      "webpack-env",
+      "webpack-env"
     ],
     "lib": [
       "es5",

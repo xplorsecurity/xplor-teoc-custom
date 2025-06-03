@@ -22,11 +22,6 @@ export interface IListItem {
     roleLeadsObj?: string;
     incidentDescription?: string;
     incidentType?: string;
-    incidentProduct?: string;
-
-    incidentMitreTactic?: string;
-    incidentRisk?: string;
-
     incidentCommanderObj?: string;
     severity?: string;
     lastModifiedBy?: string;
@@ -48,10 +43,6 @@ export interface IInputValidationStates {
     incidentDescriptionHasError: boolean;
     incidentStartDateTimeHasError: boolean;
     incidentCommandarHasError: boolean;
-
-    incidentProductHasError: boolean;
-    incidentMitreTacticHasError: boolean;
-    incidentRisHasError: boolean;
 }
 
 export interface IRoleItem {
@@ -63,10 +54,6 @@ export interface IRoleItem {
 
 export interface IIncidentTypeDefaultRoleItem {
     itemId?: string;
-// incident product
-    incidentProduct?: string;
-    incidentMitreTactic?: string;
-    incidentRisk?: string;
     incidentType?: string;
     roleAssignments?: string;
     roleLeads?: string;
@@ -109,10 +96,6 @@ export default class CommonService {
                     modifiedDate: item.fields.Modified,
                     teamWebURL: item.fields.TeamWebURL,
                     incidentDescription: item.fields.Description,
-                    //incident Product
-                    incidentProduct: item.fields.IncidentProduct,
-                    incidentMitreTactic: item.fields.IncidentMitreTactic,
-                    incidentRisk: item.fields.IncidentRisk,
                     incidentType: item.fields.IncidentType,
                     roleAssignments: item.fields.RoleAssignment,
                     roleLeads: item.fields.RoleLeads,
@@ -608,12 +591,6 @@ export default class CommonService {
                     startDate: this.formatDate(item.fields.StartDateTime),
                     modifiedDate: new Date(item.fields.Modified).toDateString().slice(4) + " " + new Date(item.fields.Modified).toLocaleTimeString(),
                     incidentDescription: item.fields.Description,
-                    
-                    //incident Category
-                    incidentProduct: item.fields.IncidentProduct,
-                    incidentMitreTactic: item.fields.IncidentMitreTactic,
-                    incidentRisk: item.fields.IncidentRisk,
-
                     incidentType: item.fields.IncidentType,
                     roleAssignments: item.fields.RoleAssignment ? this.formatRoleAssignments(item.fields.RoleAssignment) : item.fields.RoleAssignment,
                     roleAssignmentsObj: item.fields.RoleAssignment ? this.formatRoleAssignmentsForGrid(item.fields.RoleAssignment) : item.fields.RoleAssignment,

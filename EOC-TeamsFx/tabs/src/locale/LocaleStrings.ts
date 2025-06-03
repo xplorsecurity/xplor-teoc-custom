@@ -5,7 +5,7 @@ const localizedStrings = {
                 AppTitleLabel: "App Title",
                 AppTitlePlaceholderText: "Max 50 Characters",
                 btnLogin: "Login",
-                appTitle: "Security Incident Emergency Operations Center",
+                appTitle: "Microsoft Teams Emergency Operations Center",
                 welcome: "Welcome",
                 moreInfo: "More Info",
                 support: "Support",
@@ -47,12 +47,7 @@ const localizedStrings = {
                 fieldIncidentStatus: "Incident Status",
                 fieldDescription: "Description",
                 fieldIncidentType: "Incident Type",
-
-                fieldProductList:"Product", //incProductList ProductList
-                fieldMitreTacticList:"Mitre Tactic",
-                fieldRiskList:"Risk",
-
-                fieldIncidentCommander: "Commander", //"Incident Commander"
+                fieldIncidentCommander: "Incident Commander",
                 fieldStartDate: "Start Date & Time",
                 fieldLocation: "Location",
                 peoplePickerLoader: "Loading results...",
@@ -70,10 +65,6 @@ const localizedStrings = {
                 phIncidentStatus: "Select Incident Status",
                 phDescription: "Enter Incident Description(Max 500 Characters)",
                 phIncidentType: "Type or Select Incident Type",
-
-                phProductList:"Type or Select Product", //incProductList ProductList
-                phMitreTacticList:"Type or Select Mitre Tactic",
-                phRiskList:"Type or Select Risk",
                 phIncidentCommander: "Type name to select Incident Commander",
                 phStartDate: "Select Date & Time",
                 phLocation: "Enter Location(Max 50 Characters)",
@@ -107,11 +98,6 @@ const localizedStrings = {
                 noIncidentsFound: "No Incidents Found!",
                 incidentNameRequired: "Incident Name is required.",
                 incidentTypeRequired: "Incident Type is required.",
-
-                incidentProductListRequired:"Product is required.", //incProductList ProductList
-                incidentMitreTacticListRequired:"Mitre Tactic is required.",
-                incidentRiskListRequired:"Risk is required.",
-
                 startDateRequired: "Start Time is required.",
                 statusRequired: "Status is required.",
                 incidentDescRequired: "Description is required.",
@@ -146,11 +132,6 @@ const localizedStrings = {
                 orderLabel: "Order",
                 prefixLabel: "Prefix Value",
                 incidentTypeLabel: "Incident Type",
-                
-                productListLabel:"Product", //incProductList ProductList
-                mitreTacticListLabel:"Mitre Tactic",
-                riskListLabel:"Risk",
-
                 incidentNameLabel: "Incident Name",
                 previewLabel: "Preview",
                 btnSaveChanges: "Save Changes",
@@ -162,23 +143,9 @@ const localizedStrings = {
                 prefixValueRequired: "Prefix Value is required",
                 manageLabel: "Manage",
                 manageIncidentTypesTooltip: "Manage Incident Types",
-                
-
-                //  manageProductListTooltip:"Manage Product",
-                manageIncidentProductsTooltip:"Manage Product", //incProductList ProductList
-                manageMitreTacticsTooltip:"Manage Mitre Tactic", 
-                manageRisksTooltip:"Manage Risk", 
-
-
                 manageRolesTooltip: "Manage Roles",
                 manageTeamNameTooltip: " Manage Team Name",
                 incidentTypesLabel: "Incident Types",
-
-               // productListsLabel
-                incidentProductsLabel:"Products", //incProductList ProductList
-                incidentMitreTacticsLabel:"Mitre Tactic", 
-                incidentRisksLabel:"Risk", 
-
                 teamNameLabel: "Team Name",
                 activateBridgeLabel: "Activate Bridge",
                 joinBridgeButtonLabel: "Join Bridge",
@@ -252,7 +219,6 @@ const localizedStrings = {
                 additionalChannelsFieldLabel: "Create or Modify Team Channels",
                 additionalChannelsFieldPlaceholder: "Enter Channel Name (Max 50 Characters)",
                 addChannelBtnLabel: "Add Channel",
-                addCategoryBtnLabel: "Add Category",                
                 additionalChannelsFieldSaveDefaultTooltipContent: "Save default Additional Channels for selected incident type",
                 additionalChannelsFieldInfoIconTooltipContent: 'By default "General", "Announcements" and "Assessment" channels will be created. Use this option to create or modify other additional channels. Only existing incident team members can be added to a private channel.',
                 guestUsersNotAllowedAsSecIncCommanderErrorMsg: "Guest users are not allowed to be added as Secondary Incident Commander or to the role configured with Edit Access",

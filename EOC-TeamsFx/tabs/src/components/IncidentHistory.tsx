@@ -135,7 +135,7 @@ export default class IncidentHistory extends React.PureComponent<IIncidentHistor
             //graph endpoint to get all versions
             let graphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}/lists/${siteConfig.incidentsList}/items/${this.props.incidentId}/versions?$expand=fields
             ($select=StatusLookupId,Status,id,IncidentId,IncidentName,IncidentCommander,Location,StartDateTime,
-            Modified,Description,IncidentType,IncidentProduct,IncidentMitreTactic,IncidentRisk,RoleAssignment,Severity,BridgeID,ReasonForUpdate,IncidentStatus,RoleLeads,CloudStorageLink)`;
+            Modified,Description,IncidentType,RoleAssignment,Severity,BridgeID,ReasonForUpdate,IncidentStatus,RoleLeads,CloudStorageLink)`;
             const versionsData = await this.dataService.getVersionsData(graphEndpoint, this.props.graph);
 
             this.setState({

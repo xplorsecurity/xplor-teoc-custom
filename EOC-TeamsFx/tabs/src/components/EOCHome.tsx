@@ -26,7 +26,7 @@ const AdminSettings = loadable(() => import("./AdminSettings"));
 const IncidentDetails = loadable(() => import("./IncidentDetails"));
 const IncidentHistory = loadable(() => import("./IncidentHistory"));
 
-debugger;
+
 initializeIcons();
 //Global Variables
 let appInsights: ApplicationInsights;
@@ -36,7 +36,7 @@ let siteName = process.env.REACT_APP_SHAREPOINT_SITE_NAME?.toString().replace(/\
 
 //Get graph base URL from ARMS template(environment variable)
 let graphBaseURL = process.env.REACT_APP_GRAPH_BASE_URL?.toString().replace(/\s+/g, '');
-//graphBaseURL = graphBaseURL || constants.defaultGraphBaseURL;
+graphBaseURL = graphBaseURL || constants.defaultGraphBaseURL;
 
 interface IEOCHomeState {
     showLoginPage: boolean;
@@ -107,9 +107,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
         };
 
         const graph = this.createMicrosoftGraphClient(this.credential, scope);
-
-        debugger;
-
         console.log(constants.infoLogPrefix + "graph ", graph);
 
         this.successMessagebarRef = React.createRef();
@@ -167,24 +164,15 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
     }
 
     async componentDidMount() {
-
-        debugger;
         this.credential = this.credential || this.props?.teamsUserCredential;
         if (this.credential) {
             await this.initGraphToolkit(this.credential, graphConfig.scope);
-            debugger;
             await this.checkIsConsentNeeded();
-            debugger;
 
-            console.log("microsoft teams :::::::::::::",microsoftTeams);
             try {
                 /*Identify the context of the app, whether its being opened as Personal app or from Teams tab.
                  If opened from Teams tab retrieve Incident ID from the current Teams Name*/
-/*
-       //  microsoftTeams.app.initialize().then(() => {
-
                 microsoftTeams.app.getContext().then(ctx => {
-                    debugger;
                     microsoftTeams.pages.tabs.getMruTabInstances().then((tabInfo: any) => {
                         if (ctx.channel?.id && ctx.channel?.displayName && tabInfo.teamTabs[0].tabName === constants.activeDashboardTabTitle) {
                             this.setState({
@@ -195,11 +183,8 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
                     });
                 });
 
-
-
                 // get current user's language from Teams App settings
                 microsoftTeams.app.getContext().then(ctx => {
-                    debugger;
                     if (ctx?.app?.locale !== "") {
                         this.setState({
                             locale: ctx.app.locale,
@@ -219,7 +204,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
                     this.updateTheme(theme);
                 });
 
-                debugger;
                 //Get the app settings from the teams context. This is required to create the 'ActiveDashboard' tab
                 microsoftTeams.pages.getConfig().then((settings) => {
                     console.log(constants.infoLogPrefix + "settings ", settings);
@@ -230,54 +214,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
                 microsoftTeams.app.registerOnThemeChangeHandler((theme: string) => {
                     this.updateTheme(theme);
                 });
-          //  });
-          */
-
-                    try {
-                        // Retrieve Teams context
-                        const ctx = await microsoftTeams.app.getContext();
-                        
-                        // Retrieve MRU tab instances
-                        const tabInfo = await microsoftTeams.pages.tabs.getMruTabInstances();
-                        if (ctx.channel?.id && ctx.channel?.displayName && tabInfo.teamTabs[0].tabName === constants.activeDashboardTabTitle) {
-                            this.setState({
-                                activeDashboardIncidentId: ctx.sharePointSite?.teamSitePath?.split("_")[1] as any,
-                                fromActiveDashboardTab: true
-                            });
-                        }
-                
-                        // Get current user's language and other info from Teams context
-                        if (ctx?.app?.locale !== "") {
-                            this.setState({
-                                locale: ctx.app.locale,
-                                userPrincipalName: ctx.user?.userPrincipalName,
-                                tenantID: ctx.user?.tenant?.id
-                            });
-                        } else {
-                            this.setState({
-                                locale: constants.defaultLocale,
-                                userPrincipalName: ctx.user?.userPrincipalName,
-                                tenantID: ctx.user?.tenant?.id
-                            });
-                        }
-                
-                        // Get current theme from Teams context
-                        const theme = ctx.app.theme ?? constants.defaultMode;
-                        this.updateTheme(theme);
-                
-                        // Get app settings from the Teams context
-                        const settings = await microsoftTeams.pages.getConfig();
-                        console.log(constants.infoLogPrefix + "settings ", settings);
-                        this.setState({ appSettings: settings });
-                
-                        // Register the theme change handler
-                        microsoftTeams.app.registerOnThemeChangeHandler((theme: string) => {
-                            this.updateTheme(theme);
-                        });
-                
-                    } catch (error) {
-                        console.error("Error in componentDidMount: ", error);
-                    }
 
                 //Initialize App Insights
                 appInsights = new ApplicationInsights({
@@ -308,8 +244,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
     }
     //create MS Graph client
     createMicrosoftGraphClient(credential: TeamsUserCredential, scopes: string[]) {
-
-        debugger;
         const authProvider = new TeamsFxProvider(credential, scopes);
         const graphClient = Client.initWithMiddleware({
             authProvider: authProvider,
@@ -358,18 +292,12 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
     // Initialize the toolkit and get access token
     async initGraphToolkit(credential: TeamsUserCredential, scopeVar: string[]) {
         async function getAccessToken(scopeVar: any) {
-            debugger;
             let tokenObj = await credential.getToken(scopeVar);
-
-            debugger;
-            console.log(tokenObj);
-
             return tokenObj?.token || "";
         }
 
         async function login() {
             try {
-                debugger;
                 await credential.login(scopeVar);
             } catch (err) {
                 alert("Login failed: " + err);
@@ -391,13 +319,11 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
         try {
             await this.credential.getToken(this.scope);
         } catch (error) {
-            debugger;
             this.setState({
                 showLoginPage: true
             });
             return true;
         }
-        debugger;
         this.setState({
             showLoginPage: false
         });
@@ -406,8 +332,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
 
     // this function gets called on Authorized button click
     public loginClick = async () => {
-        debugger;
-
         const { scope } = {
             scope: graphConfig.scope
         };
@@ -420,7 +344,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
         const profile = await this.dataService.getGraphData(graphConfig.meGraphEndpoint, graph); // get user profile to validate the API
 
         // validate if the above API call is returning result
-        debugger;
         if (!!profile) {
             this.setState({ showLoginPage: false, graph: graph })
 
@@ -446,10 +369,8 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
             const graphContextURL = rootSite["@odata.context"].split("$")[0];
 
             // Form the graph end point to get the SharePoint site Id
-
-            debugger;
             const urlForSiteId = graphConfig.spSiteGraphEndpoint + tenantName + ":/sites/" + siteName + "?$select=id";
-            console.log(urlForSiteId);
+
             // get SharePoint site Id
             const siteDetails = await this.dataService.getGraphData(urlForSiteId, this.state.graph);
 
@@ -812,9 +733,6 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
 
 
     public render() {
-
-        debugger;
-
         if (this.state.locale && this.state.locale !== "") {
             localeStrings.setLanguage(this.state.locale);
         }
@@ -833,18 +751,12 @@ export default class EOCHome extends React.Component<IEOCHomeProps, IEOCHomeStat
                             appTitle={this.state.appTitle}                           
                         />
 
-                        {
-                 
-                        
-                        this.state.showLoginPage &&
+                        {this.state.showLoginPage &&
                             <div className='loginButton'>
                                 <Button primary content={localeStrings.btnLogin} disabled={!this.state.showLoginPage} onClick={this.loginClick} />
                             </div>
                         }
-                        
-                        {
-                        
-                        !this.state.showLoginPage && this.state.siteId !== "" &&
+                        {!this.state.showLoginPage && this.state.siteId !== "" &&
                             <div>
                                 {this.state.showSuccessMessageBar &&
                                     <div ref={this.successMessagebarRef}>

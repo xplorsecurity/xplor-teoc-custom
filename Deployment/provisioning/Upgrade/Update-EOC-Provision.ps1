@@ -1,4 +1,4 @@
-param([string]$TenantName)
+﻿param([string]$TenantName)
 
 $FilePath = Read-Host "Please enter site template XML schema file path";
 $FilePath = $FilePath.Trim();

@@ -10,7 +10,7 @@
         "@microsoft/applicationinsights-web": "^2.8.18",
         "@microsoft/mgt-components": "^2.10.0",
         "@microsoft/mgt-react": "^2.10.0",
-        "@microsoft/mgt-teamsfx-provider": "^4.4.0",
+        "@microsoft/mgt-teamsfx-provider": "^4.2.1",
         "@microsoft/microsoft-graph-client": "3.0.1",
         "@microsoft/teams-js": "^2.21.0",
         "@microsoft/teamsfx": "2.1.0",
@@ -41,7 +41,6 @@
         "react-table": "^6.11.5",
         "react-table-hoc-fixed-columns": "^2.3.4",
         "sass": "^1.49.0",
-        "scheduler": "^0.23.2",
         "simple-get": "^4.0.1",
         "terser": "^5.15.0",
         "uuid": "^8.3.2"

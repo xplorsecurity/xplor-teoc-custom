@@ -432,8 +432,6 @@
    "additionalChannelsFieldPlaceholder": "Enter Channel Name (Max 50 Characters)",
    "_.additionalChannelsFieldPlaceholder.comment": "This string is displayed as field placeholder",
    "addChannelBtnLabel": "Add Channel",
-   "addCategoryBtnLabel": "Add Category",
-   "_addCategoryBtnLabel.comment": "This string is displayed as button label",
    "_addChannelBtnLabel.comment": "This string is displayed as button label",
    "additionalChannelsFieldSaveDefaultTooltipContent": "Save default Additional Channels for selected incident type",
    "_additionalChannelsFieldSaveDefaultTooltipContent.comment": "This string is displayed as tooltip",

@@ -1,4 +1,4 @@
-param([string]$AdminEmail,
+﻿param([string]$AdminEmail,
   [string]$TenantName)
 
 $FilePath = Read-Host "Enter site template XML schema file path";

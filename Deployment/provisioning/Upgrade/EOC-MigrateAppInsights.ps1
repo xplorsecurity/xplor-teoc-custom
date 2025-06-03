@@ -1,4 +1,4 @@
-# function: Create Log Analytics Workspace
+﻿# function: Create Log Analytics Workspace
 function CreateLogAnalyticsWorkspace {
     param(
         [Parameter(Mandatory = $true)] [string] $subscriptionId,

@@ -571,40 +571,6 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                     <PopoverSurface as="div" className="manage-links-callout" >
 
                         <div>
-                            <div title={this.props.localeStrings.manageIncidentProductsTooltip} className="dashboard-link" onKeyDown={(event) => {
-                                if (event.shiftKey)
-                                        this.setState({ isManageCalloutVisible: false })
-                                }}>
-                                <a title={this.props.localeStrings.manageIncidentProductsTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incProductList}`} target='_blank' rel="noreferrer">
-                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
-                                    />
-                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentProductsLabel}</span>
-                                </a>
-                            </div>
-
-                            <div title={this.props.localeStrings.manageMitreTacticsTooltip} className="dashboard-link" onKeyDown={(event) => {
-                                if (event.shiftKey)
-                                        this.setState({ isManageCalloutVisible: false })
-                                }}>
-                                <a title={this.props.localeStrings.manageMitreTacticsTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incMitreTacticList}`} target='_blank' rel="noreferrer">
-                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
-                                    />
-                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentMitreTacticsLabel}</span>
-                                </a>
-                            </div>
-
-                            <div title={this.props.localeStrings.manageRisksTooltip} className="dashboard-link" onKeyDown={(event) => {
-                                if (event.shiftKey)
-                                        this.setState({ isManageCalloutVisible: false })
-                                }}>
-                                <a title={this.props.localeStrings.manageRisksTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incRiskList}`} target='_blank' rel="noreferrer">
-                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
-                                    />
-                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentRisksLabel}</span>
-                                </a>
-                            </div>
-
-
                             <div title={this.props.localeStrings.manageIncidentTypesTooltip} className="dashboard-link" onKeyDown={(event) => {
                                 if (event.shiftKey)
                                     this.setState({ isManageCalloutVisible: false })

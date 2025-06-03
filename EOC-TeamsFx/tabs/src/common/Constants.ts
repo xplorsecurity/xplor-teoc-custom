@@ -11,7 +11,7 @@ export const mobileWidth = 568;
 export const maxCharacterLength = 50;
 export const maxCharLengthForSingleLine = 50;
 export const maxCharLengthForMultiLine = 500;
-export const teamEOCPrefix = "SIRC";//"TEOC";
+export const teamEOCPrefix = "TEOC";
 export const messageBarType = {
     "error": "error",
     "success": "success"
@@ -74,12 +74,7 @@ export const teamNameConfigConstants = {
     Prefix: "Prefix",
     PrefixValue: "PrefixValue",
     StartDate: "StartDate",
-    DontInclude: "Don't Include",
-
-    //incProductList ProductList
-    IncidentProduct: "IncidentProduct",
-    IncidentMitreTactic: "IncidentMitreTactic",
-    IncidentRisk: "IncidentRisk",
+    DontInclude: "Don't Include"
 }
 
 export const defaultChannelConstants = {

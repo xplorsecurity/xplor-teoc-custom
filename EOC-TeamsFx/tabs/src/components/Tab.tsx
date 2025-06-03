@@ -4,9 +4,6 @@ import loadable from "@loadable/component";
 const EOCHome = loadable(() => import("./EOCHome"));
 
 export default function Tab() {
-
-  debugger;
-  
   return (
     <div>
       <TeamsFxContext.Consumer>

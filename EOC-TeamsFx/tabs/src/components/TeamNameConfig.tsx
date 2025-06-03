@@ -146,7 +146,7 @@ export class TeamNameConfig extends React.PureComponent<ITeamNameConfigProps, IT
         try {
             //Filter PrefixValue key from object
             let filteredArr: any = Object.keys(configData)
-                .filter((key) => key.includes(constants.teamNameConfigConstants.IncidentName) || !key.includes(constants.teamNameConfigConstants.PrefixValue) || key.includes(constants.teamNameConfigConstants.IncidentType) || key.includes(constants.teamNameConfigConstants.IncidentProduct) || key.includes(constants.teamNameConfigConstants.IncidentMitreTactic) || key.includes(constants.teamNameConfigConstants.IncidentRisk) || key.includes(constants.teamNameConfigConstants.StartDate))
+                .filter((key) => key.includes(constants.teamNameConfigConstants.IncidentName) || !key.includes(constants.teamNameConfigConstants.PrefixValue) || key.includes(constants.teamNameConfigConstants.IncidentType) || key.includes(constants.teamNameConfigConstants.StartDate))
                 .reduce((obj, key) => {
                     return Object.assign(obj, {
                         [key]: configData[key]
@@ -270,9 +270,6 @@ export class TeamNameConfig extends React.PureComponent<ITeamNameConfigProps, IT
                     Prefix: filteredArr[constants.teamNameConfigConstants.Prefix],
                     IncidentName: filteredArr[constants.teamNameConfigConstants.IncidentName],
                     IncidentType: filteredArr[constants.teamNameConfigConstants.IncidentType],
-                    IncidentProduct: filteredArr[constants.teamNameConfigConstants.IncidentProduct],//incident Productlist
-                    IncidentMitreTactic: filteredArr[constants.teamNameConfigConstants.IncidentMitreTactic],
-                    IncidentRisk: filteredArr[constants.teamNameConfigConstants.IncidentRisk],
                     StartDate: filteredArr[constants.teamNameConfigConstants.StartDate]
                 },
                 prefixIsMissing: filteredArr[constants.teamNameConfigConstants.Prefix] !== constants.teamNameConfigConstants.DontInclude && this.state.configValue.PrefixValue === '' ? true : false
@@ -310,14 +307,6 @@ export class TeamNameConfig extends React.PureComponent<ITeamNameConfigProps, IT
                         string = string + " - Start Date";
                     if (key === constants.teamNameConfigConstants.Prefix)
                         string = string + " - Prefix";
-                    
-                    // incident product
-                    if (key === constants.teamNameConfigConstants.IncidentProduct) 
-                        string = string + " - Incident Product";
-                    if (key === constants.teamNameConfigConstants.IncidentMitreTactic) 
-                        string = string + " - Incident Mitre Tactic";
-                    if (key === constants.teamNameConfigConstants.IncidentRisk) 
-                        string = string + " - Incident Risk";
                 }
             })
             return string;
@@ -405,60 +394,22 @@ export class TeamNameConfig extends React.PureComponent<ITeamNameConfigProps, IT
                                                     <label className="team-name-config-dropdown-label">{this.props.localeStrings.incidentNameLabel}</label>
                                                 </Col>
                                             </Row>
-                                                {/* incident product list  */}
-
-
                                             <Row xl={2} lg={2} md={2} sm={2} xs={2}>
                                                 <Col xl={5} lg={5} md={5} sm={5} xs={5}>
                                                     <FormDropdown
                                                         items={constants.teamNameConfigOrderDropdown}
-                                                        label={{ content: this.props.localeStrings.IncidentProductLabel + this.props.localeStrings.orderLabel, styles: { display: "none" } }}
-                                                        aria-label={this.props.localeStrings.incidentProductLabel + this.props.localeStrings.orderLabel}
+                                                        label={{ content: this.props.localeStrings.incidentTypeLabel + this.props.localeStrings.orderLabel, styles: { display: "none" } }}
+                                                        aria-label={this.props.localeStrings.incidentTypeLabel + this.props.localeStrings.orderLabel}
                                                         role="combobox"
                                                         className="team-name-config-order-dropdown"
-                                                        value={this.state.configValue.IncidentProduct}
-                                                        onChange={(_evt, val) => this.updateOrder(val, this.state.configValue, constants.teamNameConfigConstants.IncidentProduct)}
+                                                        value={this.state.configValue.IncidentType}
+                                                        onChange={(_evt, val) => this.updateOrder(val, this.state.configValue, constants.teamNameConfigConstants.IncidentType)}
                                                     />
                                                 </Col>
                                                 <Col xl={7} lg={7} md={5} sm={7} xs={7}>
-                                                    <label className="team-name-config-dropdown-label">{this.props.localeStrings.incidentProductLabel}</label>
+                                                    <label className="team-name-config-dropdown-label">{this.props.localeStrings.incidentTypeLabel}</label>
                                                 </Col>
                                             </Row>
-
-                                            <Row xl={2} lg={2} md={2} sm={2} xs={2}>
-                                                <Col xl={5} lg={5} md={5} sm={5} xs={5}>
-                                                    <FormDropdown
-                                                        items={constants.teamNameConfigOrderDropdown}
-                                                        label={{ content: this.props.localeStrings.IncidentMitreTacticLabel + this.props.localeStrings.orderLabel, styles: { display: "none" } }}
-                                                        aria-label={this.props.localeStrings.incidentMitreTacticLabel + this.props.localeStrings.orderLabel}
-                                                        role="combobox"
-                                                        className="team-name-config-order-dropdown"
-                                                        value={this.state.configValue.IncidentMitreTactic}
-                                                        onChange={(_evt, val) => this.updateOrder(val, this.state.configValue, constants.teamNameConfigConstants.IncidentMitreTactic)}
-                                                    />
-                                                </Col>
-                                                <Col xl={7} lg={7} md={5} sm={7} xs={7}>
-                                                    <label className="team-name-config-dropdown-label">{this.props.localeStrings.incidentMitreTacticLabel}</label>
-                                                </Col>
-                                            </Row>
-
-                                            <Row xl={2} lg={2} md={2} sm={2} xs={2}>
-                                                <Col xl={5} lg={5} md={5} sm={5} xs={5}>
-                                                    <FormDropdown
-                                                        items={constants.teamNameConfigOrderDropdown}
-                                                        label={{ content: this.props.localeStrings.IncidentRiskLabel + this.props.localeStrings.orderLabel, styles: { display: "none" } }}
-                                                        aria-label={this.props.localeStrings.incidentRiskLabel + this.props.localeStrings.orderLabel}
-                                                        role="combobox"
-                                                        className="team-name-config-order-dropdown"
-                                                        value={this.state.configValue.IncidentRisk}
-                                                        onChange={(_evt, val) => this.updateOrder(val, this.state.configValue, constants.teamNameConfigConstants.IncidentRisk)}
-                                                    />
-                                                </Col>
-                                                <Col xl={7} lg={7} md={5} sm={7} xs={7}>
-                                                    <label className="team-name-config-dropdown-label">{this.props.localeStrings.incidentRiskLabel}</label>
-                                                </Col>
-                                            </Row>
-
                                             <Row xl={2} lg={2} md={2} sm={2} xs={2}>
                                                 <Col xl={5} lg={5} md={5} sm={5} xs={5}>
                                                     <FormDropdown
