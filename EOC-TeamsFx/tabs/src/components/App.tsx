@@ -11,6 +11,8 @@ const clientId = process.env.REACT_APP_CLIENT_ID;
  * The main app which handles the initialization and routing
  * of the app.
  */
+
+debugger;
 export default function App() {
   const { loading, theme, themeString, teamsUserCredential } = useTeamsUserCredential({
     initiateLoginEndpoint: startLoginPageUrl!,

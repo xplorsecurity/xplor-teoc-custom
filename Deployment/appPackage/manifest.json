@@ -1,11 +1,11 @@
 {
   "$schema": "https://developer.microsoft.com/en-us/json-schemas/teams/v1.15/MicrosoftTeams.schema.json",
   "manifestVersion": "1.15",
-  "version": "3.4.0",
-  "id": "eec90894-245b-4f09-9eee-02744ae2acff",
+  "version": "3.2.1",
+  "id": "b155ce70-a3cc-4658-bdcd-5573014bec0a",
   "packageName": "com.microsoft.teams.extension",
   "developer": {
-    "name": "Xplor Security",
+    "name": "CIEOC",
     "websiteUrl": "https://aka.ms/teamsapptemplates",
     "privacyUrl": "https://privacy.microsoft.com/en-us/privacystatement",
     "termsOfUseUrl": "https://www.microsoft.com/en-us/servicesagreement"
@@ -15,19 +15,19 @@
     "outline": "resources/outline.png"
   },
   "name": {
-    "short": "xSIRC",
-    "full": "Xplor Security Incident Response Centre"
+    "short": "CIEOC",
+    "full": "Security Incident Emergency Operations Center"
   },
   "description": {
-    "short": "Xplor Security Incident Response Centre",
-    "full": "xSIRC - used by Xplor Security (CTIR) for Security Incidents."
+    "short": "Security Incident Emergency Operations Center",
+    "full": "The Security Incident Emergency Operations Center (SIS) solution template leverages the power of the Microsoft 365 platform to centralize incident response, information sharing and field communications using powerful services like Microsoft Lists, SharePoint and more. An open-source solution supported by Microsoft it provides core functionality out of the box or can be extended to meet specific agency requirements."
   },
   "accentColor": "#FFFFFF",
   "bots": [],
   "composeExtensions": [],
   "configurableTabs": [
     {
-      "configurationUrl": "https://xsirctr.azurewebsites.net/index.html#/config",
+      "configurationUrl": "https://app-sis/index.html#/config",
       "canUpdateConfiguration": true,
       "scopes": [
         "team",
@@ -38,9 +38,9 @@
   "staticTabs": [
     {
       "entityId": "index",
-      "name": "xSIRC",
-      "contentUrl": "https://xsirctr.azurewebsites.net/index.html#/tab",
-      "websiteUrl": "https://y7xvg.sharepoint.com/sites/xSIR_TEOC",
+      "name": "Teams EOC",
+      "contentUrl": "https://c5c5-103-127-176-150.ngrok-free.app/index.html#/tab",
+      "websiteUrl": "https://csiroc.sharepoint.com/sites/securityincident",
       "scopes": [
         "personal"
       ]
@@ -51,10 +51,12 @@
     "messageTeamMembers"
   ],
   "validDomains": [
-    "xsirctr.azurewebsites.net"
+    "bsn-sis.azurewebsites.net",
+    "c5c5-103-127-176-150.ngrok-free.app" ,
+    "localhost"
   ],
   "webApplicationInfo": {
-    "id": "a612b9c1-b347-4f0c-89a8-7bdf4eec3fa8",
-    "resource": "api://xsirctr.azurewebsites.net/a612b9c1-b347-4f0c-89a8-7bdf4eec3fa8"
+    "id": "b155ce70-a3cc-4658-bdcd-5573014bec0a",
+    "resource":"https://c5c5-103-127-176-150.ngrok-free.app" // "api://bsn-sis.azurewebsites.net/b155ce70-a3cc-4658-bdcd-5573014bec0a" //
   }
 }

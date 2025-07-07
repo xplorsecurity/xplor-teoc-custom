@@ -28,7 +28,7 @@ export interface IAdminSettingsProps {
     siteName: any;
     currentThemeName: string;
     isMapViewerEnabled: boolean;
-    azureMapsKeyConfigData: any;
+    bingMapsKeyConfigData: any;
     appTitle: string;
     appTitleData: any;
     editIncidentAccessRole: string;
@@ -133,7 +133,7 @@ export default class AdminSettings extends React.Component<IAdminSettingsProps, 
                                 appInsights={this.props.appInsights}
                                 userPrincipalName={this.props.userPrincipalName}
                                 isMapViewerEnabled={this.props.isMapViewerEnabled}
-                                azureMapsKeyConfigData={this.props.azureMapsKeyConfigData}
+                                bingMapsKeyConfigData={this.props.bingMapsKeyConfigData}
                                 editIncidentAccessRole={this.props.editIncidentAccessRole}
                                 editIncidentAccessRoleData={this.props.editIncidentAccessRoleData}
                             />

@@ -21,7 +21,12 @@ export interface IListItem {
     roleAssignmentsObj?: string;
     roleLeadsObj?: string;
     incidentDescription?: string;
-    incidentType?: string;
+    incidentType?: string;   
+    incidentProduct?: string;
+
+    incidentMitreTactic?: string;
+    incidentRisk?: string;
+
     incidentCommanderObj?: string;
     severity?: string;
     lastModifiedBy?: string;
@@ -43,6 +48,10 @@ export interface IInputValidationStates {
     incidentDescriptionHasError: boolean;
     incidentStartDateTimeHasError: boolean;
     incidentCommandarHasError: boolean;
+
+    incidentProductHasError: boolean;
+    incidentMitreTacticHasError: boolean;
+    incidentRisHasError: boolean;
 }
 
 export interface IRoleItem {
@@ -54,6 +63,10 @@ export interface IRoleItem {
 
 export interface IIncidentTypeDefaultRoleItem {
     itemId?: string;
+// incident product
+    incidentProduct?: string;
+    incidentMitreTactic?: string;
+    incidentRisk?: string;
     incidentType?: string;
     roleAssignments?: string;
     roleLeads?: string;
@@ -96,6 +109,10 @@ export default class CommonService {
                     modifiedDate: item.fields.Modified,
                     teamWebURL: item.fields.TeamWebURL,
                     incidentDescription: item.fields.Description,
+                    //incident Product
+                    incidentProduct: item.fields.IncidentProduct,
+                    incidentMitreTactic: item.fields.IncidentMitreTactic,
+                    incidentRisk: item.fields.IncidentRisk,
                     incidentType: item.fields.IncidentType,
                     roleAssignments: item.fields.RoleAssignment,
                     roleLeads: item.fields.RoleLeads,
@@ -247,41 +264,8 @@ export default class CommonService {
     }
 
     // generic method for a POST graph query
-    /**
-     * Sends a POST request to the specified Microsoft Graph endpoint.
-     *
-     * @param graphEndpoint - The endpoint of the Microsoft Graph API to which the request is sent.
-     * @param graph - The Microsoft Graph client used to send the request.
-     * @param requestObj - The request object containing the data to be sent in the POST request.
-     * @param maxRetry - The maximum number of retry attempts in case of a failure (default is 1).
-     * @param timeOut - The time in milliseconds to wait before retrying the request (default is 1000 ms).
-     * @returns A promise that resolves to the response of the POST request.
-     * @throws Will throw an error if the request fails after the maximum number of retry attempts.
-     */
-    public async sendGraphPostRequest(graphEndpoint: any, graph: Client, requestObj: any, maxRetry: number = 1, timeOut: number = 1000): Promise<any> {
-        let currentAttempt = 0;
-        while (currentAttempt < maxRetry) {
-            try {
-                return await graph.api(graphEndpoint).post(requestObj);
-            } catch (error: any) {
-                console.error(constants.errorLogPrefix + "CommonServices_sendGraphPostRequest \n", JSON.stringify(error));
-                currentAttempt++;
-                if (currentAttempt === maxRetry) {
-                    throw error;
-                }
-                await this.timeOut(timeOut);
-            }
-        }
-    }
-
-    /**
-     * Pauses the execution for a specified amount of time.
-     * 
-     * @param ms - The number of milliseconds to pause.
-     * @returns A promise that resolves after the specified time has elapsed.
-     */
-    private async timeOut(ms: number) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+    public async sendGraphPostRequest(graphEndpoint: any, graph: Client, requestObj: any): Promise<any> {
+        return await graph.api(graphEndpoint).post(requestObj);
     }
 
     // generic method for a PUT graph query
@@ -462,18 +446,10 @@ export default class CommonService {
     }
 
     // get existing  members of the team
-    public async getExistingTeamMembers(graphEndpoint: string, graph: Client, top: number = 500): Promise<any> {
+    public async getExistingTeamMembers(graphEndpoint: string, graph: Client): Promise<any> {
         try {
-            const data: { value: any[] } = { value: [] };
-            const members = await this.getGraphData(`${graphEndpoint}?$top=${top}`, graph);
-            data.value = members.value;
-            let nextLink = members["@odata.nextLink"];
-            while (nextLink) {
-                const nextData = await this.getGraphData(nextLink, graph);
-                data.value = [...data.value, ...nextData.value];
-                nextLink = nextData["@odata.nextLink"];
-            }
-            return data;
+            const members = await this.getGraphData(graphEndpoint, graph);
+            return members;
         } catch (ex) {
             console.error(
                 constants.errorLogPrefix + "CommonService_GetExistingTeamMembers \n",
@@ -591,6 +567,12 @@ export default class CommonService {
                     startDate: this.formatDate(item.fields.StartDateTime),
                     modifiedDate: new Date(item.fields.Modified).toDateString().slice(4) + " " + new Date(item.fields.Modified).toLocaleTimeString(),
                     incidentDescription: item.fields.Description,
+                    
+                    //incident Category
+                    incidentProduct: item.fields.IncidentProduct,
+                    incidentMitreTactic: item.fields.IncidentMitreTactic,
+                    incidentRisk: item.fields.IncidentRisk,
+
                     incidentType: item.fields.IncidentType,
                     roleAssignments: item.fields.RoleAssignment ? this.formatRoleAssignments(item.fields.RoleAssignment) : item.fields.RoleAssignment,
                     roleAssignmentsObj: item.fields.RoleAssignment ? this.formatRoleAssignmentsForGrid(item.fields.RoleAssignment) : item.fields.RoleAssignment,
@@ -617,33 +599,9 @@ export default class CommonService {
         return height;
     };
 
-//Create default tasks fpr an incident based on the incident type and the defulat tasks list
-    public async createdefaultPlannerTasks(planId: string, bucketId: string, graph: Client, siteId: string, defaultTasksList: string, incTypeID: string) {
-        try {
-
-            //Get the tasks from the "TEOC-Tasks" lists and filter it based on Incident Type
-            const defaultTasksListEndpoint = `${graphConfig.spSiteGraphEndpoint}${siteId}${graphConfig.listsGraphEndpoint}/${defaultTasksList}/items?expand=fields(select=id,Title,IncidentTypeLookupId,IncidentType)&$Top=5000`;
-            const defaultTasksListItems = await graph.api(defaultTasksListEndpoint).get();
-            const defaultTasksListFiltered = defaultTasksListItems.value.filter((e: any) => e.fields.IncidentType === incTypeID);
-            
-            //For each default task in the list create a planner task under "To-Do" bucket
-            for (const task of defaultTasksListFiltered) {                
-                const taskObj = {
-                    planId: planId,
-                    bucketId: bucketId,
-                    title: task.fields.Title
-                };
-                await this.sendGraphPostRequest(graphConfig.plannerTasksGraphEndpoint, graph, taskObj);
-            }
-        }
-        catch (error) {
-            console.error(constants.errorLogPrefix + "CommonServices_createdefaultPlannerTasks \n", JSON.stringify(error));
-            return null;
-        }
-    }
 
     //Create planner for incident tasks based on group id
-    public async createPlannerPlan(group_id: string, incident_id: string, graph: Client,siteId: string, roleAssignmentList: string,
+    public async createPlannerPlan(group_id: string, incident_id: string, graph: Client,
         graphContextURL: string, tenantID: any, generalChannelId?: string, fromTaskModule?: boolean) {
         try {
             const planTitle = "Incident - " + incident_id + ": Tasks";
@@ -653,31 +611,12 @@ export default class CommonService {
             let planId = plannerResponse.id;
             console.log(constants.infoLogPrefix + "Planner plan created");
 
-            //Get the list of roles
-            const roleGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${siteId}${graphConfig.listsGraphEndpoint}/${roleAssignmentList}/items?$expand=fields&$Top=5000`;          
-            let rolesList = await this.getDropdownOptions(roleGraphEndpoint, graph);
-            //Remove the 'new role' from the list if it exists
-            const newRoleIndex = rolesList.indexOf(constants.newRole);
-            if (newRoleIndex > -1) {
-                rolesList.splice(newRoleIndex, 1);
-            }
-            //Add "To-Do" bucket to the list
-            rolesList.unshift(constants.plannerBucketTitle);
-            let toDoBucketId="";
+            //Create default bucket("To do") for the plan
+            const bucketObj = { "name": constants.plannerBucketTitle, "planId": planId, "orderHint": " !" };
 
-            //Create a bucket for each role with "To-Do" bucket as first bucket
-            for (const role of rolesList) {
-                //Order "To Do" as a first bucket
-                const order = (role == constants.plannerBucketTitle) ? "5637 !" : "adhg !";
-                const bucketObj = { "name": role, "planId": planId, "orderHint": order };
-                let plannerResponse = await this.sendGraphPostRequest(graphConfig.plannerGraphEndpoint, graph, plannerObj);
-                let bucketResponse = await this.sendGraphPostRequest(graphConfig.bucketsGraphEndpoint, graph, bucketObj);
-                //Get the bucket ID for "To do" bucket to create the default tasks
-                if (role == constants.plannerBucketTitle)
-                    toDoBucketId = bucketResponse.id;
-            }
+            await this.sendGraphPostRequest(graphConfig.bucketsGraphEndpoint, graph, bucketObj);
 
-           let general_channel_id = generalChannelId;
+            let general_channel_id = generalChannelId;
             if (fromTaskModule) {
                 //Get General channel id
                 general_channel_id = await this.getChannelId(graph, group_id, constants.General);
@@ -714,14 +653,10 @@ export default class CommonService {
                 };
             }
             //adding tasks by planner and to do app to general channel
-            // Add max retry logic for tab creation to handle Teams Graph API limitations
-            await this.sendGraphPostRequest(graphTabEndPoint, graph, tasksTabObj, 3);
+            await this.sendGraphPostRequest(graphTabEndPoint, graph, tasksTabObj);
             console.log(constants.infoLogPrefix + "Tasks app is added to General Channel");
-            return{
-                planId:planId,
-                toDoBucketId:toDoBucketId
-            }
-          
+
+            return planId;
         }
         catch (error) {
             console.error(constants.errorLogPrefix + "CommonServices_CreatePlannerPlan \n", JSON.stringify(error));
@@ -756,8 +691,7 @@ export default class CommonService {
                     "websiteUrl": appSettings.websiteUrl
                 }
             };
-            // Add max retry logic for tab creation to handle Teams Graph API limitations
-            await this.sendGraphPostRequest(graphTabEndPoint, graph, teocObj, 3);
+            await this.sendGraphPostRequest(graphTabEndPoint, graph, teocObj);
 
             console.log(constants.infoLogPrefix + `TEOC App added to Active Dashboard Tab in Incident Team General channel`);
         }

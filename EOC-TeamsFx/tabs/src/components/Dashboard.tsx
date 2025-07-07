@@ -40,9 +40,8 @@ export interface IDashboardProps {
     activeDashboardIncidentId: string;
     fromActiveDashboardTab: boolean;
     isMapViewerEnabled: boolean;
-    azureMapsKeyConfigData: any;
-    graphBaseUrl: any;
-    currentUserId: string;
+    bingMapsKeyConfigData: any;
+
 }
 
 export interface IDashboardState {
@@ -140,30 +139,22 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
     }
 
 
-    // connect with service layer to get all incidents
+    // connect with servie layer to get all incidents
     getDashboardData = async () => {
 
         this.setState({
             showLoader: true
         })
+
         try {
-             // create graph endpoint for querying Incident Transaction list
-            let graphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}` + graphConfig.listsGraphEndpoint + `/${siteConfig.incidentsList}/items?$expand=fields
+            // create graph endpoint for querying Incident Transaction list
+            let graphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}/lists/${siteConfig.incidentsList}/items?$expand=fields
                 ($select=StatusLookupId,Status,id,IncidentId,IncidentName,IncidentCommander,Location,StartDateTime,
-                Modified,TeamWebURL,Description,IncidentType,RoleAssignment,RoleLeads,Severity,PlanID,
+                Modified,TeamWebURL,Description,IncidentProduct,IncidentMitreTactic,IncidentRisk,IncidentType,RoleAssignment,RoleLeads,Severity,PlanID,
                 BridgeID,BridgeLink,NewsTabLink,CloudStorageLink)&$Top=5000`;
 
-           let allIncidents = this.sortDashboardData(await this.dataService.getDashboardData(graphEndpoint, this.props.graph));
-            
-           const currentUserId = this.props.currentUserId;
-           
-           //Filter incidents that current user is part of, either as a member, IncidentCommander or createdBy
-           allIncidents = allIncidents.filter((item: any) => 
-            (item.roleAssignments?.includes(currentUserId) || 
-            item.incidentCommanderObj?.includes(currentUserId) || 
-            item.createdById?.includes(currentUserId))
-            );
-           console.log(constants.infoLogPrefix + "All Incidents retrieved");                        
+            let allIncidents = this.sortDashboardData(await this.dataService.getDashboardData(graphEndpoint, this.props.graph));
+            console.log(constants.infoLogPrefix + "All Incidents retrieved");
 
             // Redirect to current Incident Active Dashboard component
            const activeIncident = allIncidents.find((e: any) => e.incidentId === parseInt(this.props.activeDashboardIncidentId));
@@ -173,7 +164,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
             else {
                 // filter for Planning tab
                 const planningIncidents = allIncidents.filter((e: any) => e.incidentStatusObj.status === constants.planning);
-                
+
                 // filter for Active tab
                 const activeIncidents = allIncidents.filter((e: any) => e.incidentStatusObj.status === constants.active);
 
@@ -406,7 +397,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
     statusFormatter = (cell: any, row: any, rowIndex: any, formatExtraData: any) => {
         if (row.incidentStatusObj.status === constants.closed) {
             return (
-                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.closed}`}>
+                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.closed}`} role="status">
                     <img src={require("../assets/Images/ClosedIcon.svg").default} className="status-icon"
                         aria-hidden="true" title={this.props.localeStrings.closed} />
                 </span>
@@ -414,7 +405,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
         }
         if (row.incidentStatusObj.status === constants.active) {
             return (
-                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.active}`}>
+                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.active}`} role="status">
                     <img src={require("../assets/Images/ActiveIcon.svg").default} className="status-icon"
                         aria-hidden="true" title={this.props.localeStrings.active} />
                 </span>
@@ -422,7 +413,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
         }
         if (row.incidentStatusObj.status === constants.planning) {
             return (
-                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.planning}`}>
+                <span aria-label={`${this.props.localeStrings.status} ${this.props.localeStrings.planning}`} role="status">
                     <img src={require("../assets/Images/PlanningIcon.svg").default} className="status-icon"
                         aria-hidden="true" title={this.props.localeStrings.planning} />
                 </span>
@@ -432,7 +423,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
 
     // format the cell for Location column to fix accessibility issues
     locationFormatter = (cell: any, gridRow: any, rowIndex: any, formatExtraData: any) => {
-        const ariaLabel = `${this.props.localeStrings.location} ${JSON.parse(cell).DisplayName}`
+        const ariaLabel = `${this.props.localeStrings.location} ${cell}`
         if (cell !== "null" || cell !== "") {
             return (
                 <span aria-label={ariaLabel}><span aria-hidden="true" title={JSON.parse(cell).DisplayName}>{JSON.parse(cell).DisplayName}</span></span>
@@ -571,6 +562,40 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                     <PopoverSurface as="div" className="manage-links-callout" >
 
                         <div>
+                            <div title={this.props.localeStrings.manageIncidentProductsTooltip} className="dashboard-link" onKeyDown={(event) => {
+                                if (event.shiftKey)
+                                        this.setState({ isManageCalloutVisible: false })
+                                }}>
+                                <a title={this.props.localeStrings.manageIncidentProductsTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incProductList}`} target='_blank' rel="noreferrer">
+                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
+                                    />
+                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentProductsLabel}</span>
+                                </a>
+                            </div>
+
+                            <div title={this.props.localeStrings.manageMitreTacticsTooltip} className="dashboard-link" onKeyDown={(event) => {
+                                if (event.shiftKey)
+                                        this.setState({ isManageCalloutVisible: false })
+                                }}>
+                                <a title={this.props.localeStrings.manageMitreTacticsTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incMitreTacticList}`} target='_blank' rel="noreferrer">
+                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
+                                    />
+                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentMitreTacticsLabel}</span>
+                                </a>
+                            </div>
+
+                            <div title={this.props.localeStrings.manageRisksTooltip} className="dashboard-link" onKeyDown={(event) => {
+                                if (event.shiftKey)
+                                        this.setState({ isManageCalloutVisible: false })
+                                }}>
+                                <a title={this.props.localeStrings.manageRisksTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.incRiskList}`} target='_blank' rel="noreferrer">
+                                    <img src={require("../assets/Images/Manage Incident Types.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
+                                    />
+                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.incidentRisksLabel}</span>
+                                </a>
+                            </div>
+
+
                             <div title={this.props.localeStrings.manageIncidentTypesTooltip} className="dashboard-link" onKeyDown={(event) => {
                                 if (event.shiftKey)
                                     this.setState({ isManageCalloutVisible: false })
@@ -586,13 +611,6 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                                     <img src={require("../assets/Images/Manage Roles.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
                                     />
                                     <span role="button" className="manage-callout-text">{this.props.localeStrings.roles}</span>
-                                </a>
-                            </div>
-                            <div title={this.props.localeStrings.tasksAdminMenuTooltip} className="dashboard-link">
-                                <a title={this.props.localeStrings.tasksAdminMenuTooltip} href={`https://${this.props.tenantName}/sites/${this.props.siteName}/lists/${siteConfig.defaulTasksList}`} target='_blank' rel="noreferrer">
-                                    <img src={require("../assets/Images/Tasks.svg").default} alt="" className={`manage-item-icon${this.props.currentThemeName === constants.defaultMode ? "" : " manage-item-icon-darkcontrast"}`}
-                                    />
-                                    <span role="button" className="manage-callout-text">{this.props.localeStrings.tasksAdminMenuLabel}</span>
                                 </a>
                             </div>
                             <div
@@ -927,7 +945,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                                                 noDataIndication={() => (<div id="noincident-all-tab" aria-live="polite" role="status">{this.props.localeStrings.noIncidentsFound}</div>)}
                                             />
                                             :
-                                            <MapViewer graphBaseUrl={this.props.graphBaseUrl} incidentData={this.state.filteredAllIncidents} azureMapKey={this.props.azureMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
+                                            <MapViewer incidentData={this.state.filteredAllIncidents} bingMapKey={this.props.bingMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
                                         }
                                     </PivotItem>
                                     <PivotItem
@@ -949,7 +967,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                                                 noDataIndication={() => (<div id="noincident-planning-tab" aria-live="polite" role="status">{this.props.localeStrings.noIncidentsFound}</div>)}
                                             />
                                             :
-                                            <MapViewer graphBaseUrl={this.props.graphBaseUrl} incidentData={this.state.filteredPlanningIncidents} azureMapKey={this.props.azureMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
+                                            <MapViewer incidentData={this.state.filteredPlanningIncidents} bingMapKey={this.props.bingMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
                                         }
                                     </PivotItem>
                                     <PivotItem
@@ -971,7 +989,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                                                 noDataIndication={() => (<div id="noincident-active-tab" aria-live="polite" role="status">{this.props.localeStrings.noIncidentsFound}</div>)}
                                             />
                                             :
-                                            <MapViewer graphBaseUrl={this.props.graphBaseUrl} incidentData={this.state.filteredActiveIncidents} azureMapKey={this.props.azureMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
+                                            <MapViewer incidentData={this.state.filteredActiveIncidents} bingMapKey={this.props.bingMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
                                         }
                                     </PivotItem>
                                     <PivotItem
@@ -994,7 +1012,7 @@ class Dashboard extends React.PureComponent<IDashboardProps, IDashboardState> {
                                                 noDataIndication={() => (<div id="noincident-completed-tab" aria-live="polite" role="status">{this.props.localeStrings.noIncidentsFound}</div>)}
                                             />
                                             :
-                                            <MapViewer graphBaseUrl={this.props.graphBaseUrl} incidentData={this.state.filteredCompletedIncidents} azureMapKey={this.props.azureMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
+                                            <MapViewer incidentData={this.state.filteredCompletedIncidents} bingMapKey={this.props.bingMapsKeyConfigData} showMessageBar={this.props.showMessageBar} userPrincipalName={this.props.userPrincipalName} localeStrings={this.props.localeStrings} appInsights={this.props.appInsights}></MapViewer>
                                         }
                                     </PivotItem>
                                 </Pivot>

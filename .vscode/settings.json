@@ -1,0 +1,4 @@
+{
+    "dotnetAcquisitionExtension.enableTelemetry": false,
+    "gitlens.telemetry.enabled": false
+}

@@ -20,6 +20,9 @@ class TabConfig extends React.Component {
      */
     microsoftTeams.pages.config.registerOnSaveHandler((saveEvent) => {
       const baseUrl = `https://${window.location.hostname}:${window.location.port}`;
+
+      debugger;
+      
       microsoftTeams.pages.config.setConfig({
         suggestedDisplayName: "EOC",
         entityId: "Test",
@@ -44,7 +47,7 @@ class TabConfig extends React.Component {
 
     return (
       <div>
-        <h1> Microsoft Teams Emergency Operations Center</h1>
+        <h1>Security Incident Emergency Operations Center</h1>
         <div>       
         App Template to help facilitate the creation of teams and assets for incident response for designated scenarios. In addition to quick team creation and asset deployment, TEOC also delivers a central dashboard to see and manage incidents from and take further action. Helping you to respond and act quicker powered by the solutions you already have.
         </div>

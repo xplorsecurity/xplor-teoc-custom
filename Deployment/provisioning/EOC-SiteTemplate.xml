@@ -154,6 +154,9 @@
                 <FieldRef Name="LinkTitle" />
                 <FieldRef Name="Description" />
                 <FieldRef Name="IncidentName" />
+                <FieldRef Name="IncidentProduct" />
+                <FieldRef Name="IncidentMitreTactic" />
+                <FieldRef Name="IncidentRisk" />                 
                 <FieldRef Name="IncidentType" />
                 <FieldRef Name="Status" />
                 <FieldRef Name="StartDateTime" />
@@ -173,6 +176,14 @@
           <pnp:Fields>
             <Field DisplayName="Description" Type="Note" Required="FALSE" ID="{717d7908-3441-42b1-8468-3ce96811e94d}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="Description" Name="Description" ColName="nvarchar4" RowOrdinal="0" Version="1" />
             <Field DisplayName="IncidentName" Type="Text" Required="FALSE" ID="{eb457654-d965-46d2-900d-374282a2bb71}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="IncidentName" Name="IncidentName" ColName="nvarchar5" RowOrdinal="0" Version="1" />
+            
+
+            <Field DisplayName="IncidentProduct" Type="Text" Required="FALSE" ID="{0fd3a1cf-bc36-4b21-b981-c34c6aef041c}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="IncidentProduct" Name="IncidentProduct" ColName="nvarchar6" RowOrdinal="0" Version="1" />
+
+             <Field DisplayName="IncidentMitreTactic" Type="Text" Required="FALSE" ID="{8a76c469-d5db-4840-80e7-b415f77cff05}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="IncidentMitreTactic" Name="IncidentMitreTactic" ColName="nvarchar6" RowOrdinal="0" Version="1" />
+
+            <Field DisplayName="IncidentRisk" Type="Text" Required="FALSE" ID="{d0724279-e0f8-425b-89dd-f358ce9db1c7}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="IncidentRisk" Name="IncidentRisk" ColName="nvarchar6" RowOrdinal="0" Version="1" />
+
             <Field DisplayName="IncidentType" Type="Text" Required="FALSE" ID="{89e2af99-6f53-40db-87d6-31c0a7f03093}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="IncidentType" Name="IncidentType" ColName="nvarchar6" RowOrdinal="0" Version="1" />
             <Field DisplayName="Status" Type="Lookup" Required="FALSE" EnforceUniqueValues="FALSE" List="{listid:TEOC-IncidentStatus}" ShowField="Title" UnlimitedLengthInDocumentLibrary="FALSE" RelationshipDeleteBehavior="None" ID="{ca05aae9-7cbf-41a2-9d3c-6902dd0925bb}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="Status" Name="Status" ColName="int1" RowOrdinal="0" /> 
             <Field DisplayName="StartDateTime" Type="DateTime" Required="FALSE" ID="{9100a987-5b2b-48c8-a235-90c6a923f274}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="StartDateTime" Name="StartDateTime" ColName="datetime1" RowOrdinal="0" Version="1" />
@@ -191,12 +202,115 @@
             <Field DisplayName="CloudStorageLink" Type="Note" Required="FALSE" ID="{709bfe98-d2b6-4d99-bd45-29590b1ca07f}" SourceID="{{listid:TEOC-IncidentTransaction}}" StaticName="CloudStorageLink" Name="CloudStorageLink" ColName="nvarchar25" RowOrdinal="0" Version="1" />
           </pnp:Fields>
         </pnp:ListInstance>
-        <pnp:ListInstance Title="TEOC-IncidentType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/TEOC-IncidentType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/TEOC-IncidentType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/TEOC-IncidentType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/TEOC-IncidentType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
+          <pnp:ListInstance Title="SI-ProductType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/SI-ProductType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/SI-ProductType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/SI-ProductType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/SI-ProductType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
           <pnp:ContentTypeBindings>
             <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />            
           </pnp:ContentTypeBindings>
           <pnp:Views>
-            <View Name="{4EF377C3-9B4A-448B-955B-430D1BCF0ED0}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/TEOC-IncidentType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
+            <View Name="{4EF377C3-9B4A-448B-955B-430D1BCF0ED0}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/SI-ProductType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
+              <Query>
+                <OrderBy>
+                  <FieldRef Name="ID" />
+                </OrderBy>
+              </Query>
+              <ViewFields>
+                <FieldRef Name="LinkTitle" />
+              </ViewFields>
+              <RowLimit Paged="TRUE">30</RowLimit>
+              <JSLink>clienttemplates.js</JSLink>
+            </View>
+          </pnp:Views>
+          <pnp:Webhooks>
+            <pnp:Webhook ServerNotificationUrl="https://southeastasia0.pushnp.svc.ms/notifications?token=b816c626-077b-46f6-a002-189839b1c5cc" ExpiresInDays="1" />
+          </pnp:Webhooks>
+           <pnp:DataRows UpdateBehavior="Overwrite">
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Blue Square</pnp:DataValue>
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Red Circle</pnp:DataValue>              
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Yellow Star</pnp:DataValue>              
+          </pnp:DataRow>      
+        </pnp:DataRows>
+        </pnp:ListInstance>
+
+        <pnp:ListInstance Title="SIMitreTacticType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/SIMitreTacticType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/SIMitreTacticType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/SIMitreTacticType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/SIMitreTacticType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
+          <pnp:ContentTypeBindings>
+            <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />            
+          </pnp:ContentTypeBindings>
+          <pnp:Views>
+            <View Name="{4EF377C3-9B4A-448B-955B-430D1BCF0EDD}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/SIMitreTacticType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
+              <Query>
+                <OrderBy>
+                  <FieldRef Name="ID" />
+                </OrderBy>
+              </Query>
+              <ViewFields>
+                <FieldRef Name="LinkTitle" />
+              </ViewFields>
+              <RowLimit Paged="TRUE">30</RowLimit>
+              <JSLink>clienttemplates.js</JSLink>
+            </View>
+          </pnp:Views>
+          <pnp:Webhooks>
+            <pnp:Webhook ServerNotificationUrl="https://southeastasia0.pushnp.svc.ms/notifications?token=b816c626-077b-46f6-a002-189839b1c5cc" ExpiresInDays="1" />
+          </pnp:Webhooks>
+           <pnp:DataRows UpdateBehavior="Overwrite">
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Initial Access</pnp:DataValue>
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Reconnaissance</pnp:DataValue>              
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Etc</pnp:DataValue>              
+          </pnp:DataRow>      
+        </pnp:DataRows>
+        </pnp:ListInstance>
+
+
+        <pnp:ListInstance Title="SIRiskType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/SIRiskType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/SIRiskType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/SIRiskType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/SIRiskType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
+          <pnp:ContentTypeBindings>
+            <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />            
+          </pnp:ContentTypeBindings>
+          <pnp:Views>
+            <View Name="{4EF377C3-9B4A-448B-955B-430D1BCF0EDC}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/SIRiskType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
+              <Query>
+                <OrderBy>
+                  <FieldRef Name="ID" />
+                </OrderBy>
+              </Query>
+              <ViewFields>
+                <FieldRef Name="LinkTitle" />
+              </ViewFields>
+              <RowLimit Paged="TRUE">30</RowLimit>
+              <JSLink>clienttemplates.js</JSLink>
+            </View>
+          </pnp:Views>
+          <pnp:Webhooks>
+            <pnp:Webhook ServerNotificationUrl="https://southeastasia0.pushnp.svc.ms/notifications?token=b816c626-077b-46f6-a002-189839b1c5cc" ExpiresInDays="1" />
+          </pnp:Webhooks>
+           <pnp:DataRows UpdateBehavior="Overwrite">
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Accepted</pnp:DataValue>
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Mitigated</pnp:DataValue>              
+          </pnp:DataRow>
+          <pnp:DataRow>
+              <pnp:DataValue FieldName="Title">Remediated</pnp:DataValue>              
+          </pnp:DataRow>      
+        </pnp:DataRows>
+        </pnp:ListInstance>
+        
+        <pnp:ListInstance Title="SI-IncidentType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/SI-IncidentType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/SI-IncidentType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/SI-IncidentType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/SI-IncidentType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
+          <pnp:ContentTypeBindings>
+            <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />            
+          </pnp:ContentTypeBindings>
+          <pnp:Views>
+            <View Name="{4EF377C3-9B4A-448B-955B-430D1BCF0ED0}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/SI-IncidentType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
               <Query>
                 <OrderBy>
                   <FieldRef Name="ID" />
@@ -287,6 +401,8 @@
           </pnp:DataRow>
         </pnp:DataRows>
         </pnp:ListInstance>
+      
+
         <pnp:ListInstance Title="TEOC-RoleAssignments" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/TEOC-RoleAssignments" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/TEOC-RoleAssignments/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/TEOC-RoleAssignments/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/TEOC-RoleAssignments/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
           <pnp:ContentTypeBindings>
             <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />
@@ -613,64 +729,7 @@
         </Field>
         </pnp:Fields> 
       </pnp:ListInstance>
-
-       <pnp:ListInstance Title="TEOC-Tasks" Description="" DocumentTemplate="" OnQuickLaunch="true" TemplateType="100" Url="Lists/TEOC-Tasks" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/TEOC-Tasks/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/TEOC-Tasks/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/TEOC-Tasks/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.png?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false" ValidationFormula="" ValidationMessage="">
-          <pnp:ContentTypeBindings>
-            <pnp:ContentTypeBinding ContentTypeID="0x01" Default="true" />
-            <pnp:ContentTypeBinding ContentTypeID="0x0120" />
-          </pnp:ContentTypeBindings>
-          <pnp:Views>
-            <View Name="{F6AC00B6-5DCE-4195-B8DC-7E1922213046}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/TEOC-Tasks/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x" ImageUrl="/_layouts/15/images/generic.png?rev=47">
-              <Query />
-              <ViewFields>
-                <FieldRef Name="LinkTitle" />
-                <FieldRef Name="IncidentType" />
-              </ViewFields>
-              <RowLimit Paged="TRUE">30</RowLimit>
-              <JSLink>clienttemplates.js</JSLink>
-            </View>
-          </pnp:Views>
-          <pnp:Fields>
-            <Field Type="Lookup" DisplayName="IncidentType" Required="TRUE" EnforceUniqueValues="FALSE" List="{listid:TEOC-IncidentType}" ShowField="Title" UnlimitedLengthInDocumentLibrary="FALSE" RelationshipDeleteBehavior="None" ID="{24e5d015-aefe-4311-8c77-0fe99af84a56}" SourceID="{{listid:TEOC-Tasks}}" StaticName="IncidentType" Name="IncidentType" ColName="int1" RowOrdinal="0" Group="" Version="1" />
-          </pnp:Fields>
-          <pnp:FieldRefs>
-            <pnp:FieldRef ID="fa564e0f-0c70-4ab9-b863-0177e6ddd247" Name="Title" Required="true" DisplayName="Task" />
-            <pnp:FieldRef ID="76d13cd2-1bae-45a5-8b74-545b87b65037" Name="_ColorTag" DisplayName="Color Tag" />
-          </pnp:FieldRefs>
-          <pnp:Webhooks>
-            <pnp:Webhook ServerNotificationUrl="https://japaneast0-0.pushnp.svc.ms/notifications?token=9c514e26-d3cf-40bd-b0f8-3fa2a0062f3a%2Fb!zs9_4fV_d0qocJpEhXQ5_DuWg3BquCJDopXji9mp8fGH9UR0t5INQJSS8TA8pFGD" ExpiresInDays="1" />
-          </pnp:Webhooks>
-        </pnp:ListInstance>
-		<pnp:ListInstance Title="TEOC-IncidentType" Description="" DocumentTemplate="" TemplateType="100" Url="Lists/TEOC-IncidentType" EnableVersioning="true" MinorVersionLimit="0" MaxVersionLimit="50" DraftVersionVisibility="0" TemplateFeatureID="00bfea71-de22-43b2-a848-c05709900100" EnableFolderCreation="false" DefaultDisplayFormUrl="{site}/Lists/TEOC-IncidentType/DispForm.aspx" DefaultEditFormUrl="{site}/Lists/TEOC-IncidentType/EditForm.aspx" DefaultNewFormUrl="{site}/Lists/TEOC-IncidentType/NewForm.aspx" ImageUrl="/_layouts/15/images/itgen.gif?rev=47" IrmExpire="false" IrmReject="false" IsApplicationList="false">
-		  <pnp:ContentTypeBindings>
-			<pnp:ContentTypeBinding ContentTypeID="0x01" Default="true"/>
-		  </pnp:ContentTypeBindings>
-		  <pnp:Views>
-			<View Name="{E0C4A42A-1A9B-4BB9-A142-F1A226D0CABA}" DefaultView="TRUE" MobileView="TRUE" MobileDefaultView="TRUE" Type="HTML" DisplayName="All Items" Url="{site}/Lists/TEOC-IncidentType/AllItems.aspx" Level="1" BaseViewID="1" ContentTypeID="0x">
-			  <Query>
-				<OrderBy>
-				  <FieldRef Name="ID"/>
-				</OrderBy>
-			  </Query>
-			  <ViewFields>
-				<FieldRef Name="LinkTitle"/>
-			  </ViewFields>
-			  <RowLimit Paged="TRUE">30</RowLimit>
-			  <JSLink>clienttemplates.js</JSLink>
-			</View>
-		  </pnp:Views>
-		  <pnp:DataRows UpdateBehavior="Overwrite">
-			<pnp:DataRow>
-			  <pnp:DataValue FieldName="Title">Cybersecurity</pnp:DataValue>
-			</pnp:DataRow>
-			<pnp:DataRow>
-			  <pnp:DataValue FieldName="Title">Facilities</pnp:DataValue>
-			</pnp:DataRow>
-			<pnp:DataRow>
-			  <pnp:DataValue FieldName="Title">Health Incident</pnp:DataValue>
-			</pnp:DataRow>
-		  </pnp:DataRows>
-		</pnp:ListInstance>
+         
       </pnp:Lists>
       <pnp:Features>
         <pnp:WebFeatures>

@@ -1,11 +1,12 @@
 import { ComboBox, DatePicker, IComboBox, TimePicker } from "@fluentui/react";
 import { Checkbox as Fluent9CheckBox, Combobox as Fluent9Combobox, Option } from "@fluentui/react-components";
-import { ChevronDown16Regular, ChevronRight16Regular, CloudLink24Regular, Delete24Regular, Dismiss24Regular, LeafThree16Regular, PeopleCheckmark24Regular, PeopleEdit24Regular, Save24Regular } from "@fluentui/react-icons";
+import { ChevronDown16Regular, ChevronRight16Regular, CloudLink24Regular, Delete24Regular, Dismiss24Regular, PeopleCheckmark24Regular, PeopleEdit24Regular, Save24Regular } from "@fluentui/react-icons";
 import { AddIcon } from '@fluentui/react-icons-northstar';
 import {
     Button, ChevronStartIcon, Flex,
     FormDropdown, FormInput, FormTextArea, Loader
 } from "@fluentui/react-northstar";
+import { Checkbox } from '@fluentui/react/lib/Checkbox';
 import { Icon } from "@fluentui/react/lib/Icon";
 import { Toggle } from '@fluentui/react/lib/Toggle';
 import { TooltipHost } from "@fluentui/react/lib/Tooltip";
@@ -13,7 +14,6 @@ import { ApplicationInsights } from '@microsoft/applicationinsights-web';
 import { LocalizationHelper, PeoplePicker, PersonType, UserType } from '@microsoft/mgt-react';
 import { Client } from "@microsoft/microsoft-graph-client";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { chunk, reject, isNil, uniq } from "lodash";
 import moment from "moment";
 import * as React from "react";
 import Col from "react-bootstrap/Col";
@@ -79,6 +79,11 @@ export interface IIncidentDetailsState {
     eocAppId: string;
     selectedUsers: any;
     incidentTypeSearchQuery: string;
+
+    incidentProductSearchQuery: string, //incProductList ProductList
+    incidentMitreTacticSearchQuery: string,
+    incidentRiskSearchQuery: string,
+
     selectedIncidentCommander: any;
     isRoleInEditMode: boolean[];
     selectedUsersInEditMode: any;
@@ -110,7 +115,9 @@ export interface IIncidentDetailsState {
     secIncCommanderLeadInEditModeHasRegexError: boolean;
     roleAddSuccessMessage: string;
     selectedLocation: any;
-    toggleDefaultTasks: boolean;
+    isViewIncidentProduct: boolean; //Incident Product 
+    isViewIncidentMitreTactic: boolean; //Incident Mitre Tactic
+    isViewIncidentRisk: boolean; //Incidentt Risk
 }
 
 // sets the initial values for required fields validation object
@@ -120,6 +127,11 @@ const getInputValidationInitialState = (): IInputValidationStates => {
         incidentStatusHasError: false,
         incidentLocationHasError: false,
         incidentTypeHasError: false,
+
+        incidentProductHasError: false,//incProductList ProductList
+        incidentMitreTacticHasError: false,
+        incidentRiskHasError: false,
+
         incidentDescriptionHasError: false,
         incidentStartDateTimeHasError: false,
         incidentCommandarHasError: false,
@@ -135,6 +147,13 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     private incidentName: any;
     private incidentLocation: any;
     private incidentType: any;
+
+    private incidentProduct: any;
+    private incidentMitreTactic: any;
+    private incidentRisk: any;
+
+    //incProductList ProductList
+
     private incidentDescription: any;
     private incidentStartDateTime: any;
     private incidentCommandar: any;
@@ -145,6 +164,9 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     private normalSearchUserRef: React.RefObject<any>;
     private normalSearchLeadRef: React.RefObject<any>;
     private incTypeRef: any;
+    private incProductRef: any;
+    private incMitreTacticRef: any;
+    private incRiskRef: any;
 
     constructor(props: IIncidentDetailsProps) {
         super(props);
@@ -152,6 +174,10 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         this.normalSearchUserRef = React.createRef();
         this.normalSearchLeadRef = React.createRef();
         this.incTypeRef = React.createRef();
+        this.incProductRef = React.createRef();
+        this.incMitreTacticRef = React.createRef();
+        this.incRiskRef = React.createRef();
+        this.incRiskRef = React.createRef();
         this.state = {
             dropdownOptions: '',
             incDetailsItem: new IncidentEntity(),
@@ -168,6 +194,9 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             eocAppId: "",
             selectedUsers: [],
             incidentTypeSearchQuery: "",
+            incidentProductSearchQuery: "", //incProductList ProductList
+            incidentMitreTacticSearchQuery: "",
+            incidentRiskSearchQuery: "",
             selectedIncidentCommander: [],
             isRoleInEditMode: [],
             selectedUsersInEditMode: [],
@@ -199,13 +228,21 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             secIncCommanderLeadInEditModeHasRegexError: false,
             roleAddSuccessMessage: "",
             selectedLocation: "",
-            toggleDefaultTasks: false
+            isViewIncidentProduct: false,//Incidentt Product 
+            isViewIncidentMitreTactic: false, //Incident Mitre Tactic
+            isViewIncidentRisk: false, //Incidentt Risk
         };
         this.onRoleChange = this.onRoleChange.bind(this);
         this.onTextInputChange = this.onTextInputChange.bind(this);
         this.handleIncCommanderChange = this.handleIncCommanderChange.bind(this);
         this.onAddNewRoleChange = this.onAddNewRoleChange.bind(this);
         this.onIncidentTypeChange = this.onIncidentTypeChange.bind(this);
+
+        //Incidentt Product 
+        this.onIncidentProductChange = this.onIncidentProductChange.bind(this);
+        this.onIncidentMitreTacticChange = this.onIncidentMitreTacticChange.bind(this);
+        this.onIncidentRiskChange = this.onIncidentRiskChange.bind(this);
+
         this.onIncidentStatusChange = this.onIncidentStatusChange.bind(this);
 
         // localized messages for people pickers
@@ -223,6 +260,11 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         this.incidentCommandar = React.createRef();
         this.incidentDescription = React.createRef();
         this.incidentType = React.createRef();
+
+        this.incidentProduct = React.createRef(); //incProductList ProductList
+        this.incidentMitreTactic = React.createRef();
+        this.incidentRisk = React.createRef();
+
         this.incidentStartDateTime = React.createRef();
         this.incidentLocation = React.createRef();
         this.searchUser = React.createRef();
@@ -265,7 +307,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             let configData = await this.dataService.getConfigData(graphEndpoint, this.props.graph, [constants.teamNameConfig]);
             configData = { ...configData[0], value: JSON.parse(configData[0]?.value) };
             let filteredArr: any = Object.keys(configData.value)
-                .filter((key) => key.includes(constants.teamNameConfigConstants.IncidentName) || !key.includes(constants.teamNameConfigConstants.PrefixValue) || key.includes(constants.teamNameConfigConstants.IncidentType) || key.includes(constants.teamNameConfigConstants.StartDate))
+                .filter((key) => key.includes(constants.teamNameConfigConstants.IncidentName) || !key.includes(constants.teamNameConfigConstants.PrefixValue) || key.includes(constants.teamNameConfigConstants.IncidentType) || key.includes(constants.teamNameConfigConstants.IncidentProduct) || key.includes(constants.teamNameConfigConstants.IncidentMitreTactic) || key.includes(constants.teamNameConfigConstants.IncidentRisk) || key.includes(constants.teamNameConfigConstants.StartDate))
                 .reduce((obj, key) => {
                     return Object.assign(obj, {
                         [key]: configData.value[key]
@@ -405,12 +447,33 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             const incTypeGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.incTypeList}/items?$expand=fields&$Top=5000`;
             const roleGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.roleAssignmentList}/items?$expand=fields&$Top=5000`;
 
+            // product category incProductList
+            const incProductListGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.incProductList}/items?$expand=fields&$Top=5000`;
+            
+            const incMitreTacticListGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.incMitreTacticList}/items?$expand=fields&$Top=5000`;
+
+            const incRiskListGraphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.incRiskList}/items?$expand=fields&$Top=5000`;
+
+
             const statusOptionsPromise = this.dataService.getDropdownOptions(incStatusGraphEndpoint, this.props.graph, true);
             const typeOptionsPromise = this.dataService.getDropdownOptions(incTypeGraphEndpoint, this.props.graph);
             const roleOptionsPromise = this.dataService.getDropdownOptions(roleGraphEndpoint, this.props.graph);
 
-            await Promise.all([statusOptionsPromise, typeOptionsPromise, roleOptionsPromise])
-                .then(([statusOptions, typeOptions, roleOptions]) => {
+            // product category incProductList
+            const productOptionsPromise = this.dataService.getDropdownOptions(incProductListGraphEndpoint, this.props.graph);
+
+            const mitreTacticOptionsPromise = this.dataService.getDropdownOptions(incMitreTacticListGraphEndpoint, this.props.graph);
+            const riskOptionsPromise = this.dataService.getDropdownOptions(incRiskListGraphEndpoint, this.props.graph);
+
+
+            // await Promise.all([statusOptionsPromise, typeOptionsPromise, roleOptionsPromise])
+
+            // product category incProductList
+            await Promise.all([statusOptionsPromise, typeOptionsPromise, roleOptionsPromise, productOptionsPromise, mitreTacticOptionsPromise,riskOptionsPromise])
+                //.then(([statusOptions, typeOptions, roleOptions]) => {
+
+                // product category incProductList
+                .then(([statusOptions, typeOptions, roleOptions, productOptions, mitreTacticOptions,riskOptions]) => {
                     const optionsArr: any = [];
                     // remove "Closed" status from options if form is New Form
                     if (!(this.props.incidentData && this.props.incidentData.incidentId)) {
@@ -422,6 +485,11 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
 
                     optionsArr.typeOptions = typeOptions.sort();
                     optionsArr.roleOptions = roleOptions.sort();
+
+                    // product category incProductList
+                    optionsArr.productOptions = productOptions.sort();
+                    optionsArr.mitreTacticOptions = mitreTacticOptions.sort();
+                    optionsArr.riskOptions = riskOptions.sort();
 
                     const activeStatus = optionsArr.statusOptions.find((statusObj: IIncidentStatus) =>
                         statusObj.status === constants.active);
@@ -482,6 +550,11 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             incInfo.incidentId = this.props.incidentData.incidentId.toString();
             incInfo.incidentName = this.props.incidentData.incidentName ? this.props.incidentData.incidentName : '';
             incInfo.incidentType = this.props.incidentData.incidentType ? this.props.incidentData.incidentType : '';
+
+            incInfo.incidentProduct = this.props.incidentData.incidentProduct ? this.props.incidentData.incidentProduct : '';//incProductList ProductList
+            incInfo.incidentMitreTactic = this.props.incidentData.incidentMitreTactic ? this.props.incidentData.incidentMitreTactic : '';
+            incInfo.incidentRisk = this.props.incidentData.incidentRisk ? this.props.incidentData.incidentRisk : '';
+
             incInfo.startDateTime = this.props.incidentData.startDate ? this.props.incidentData.startDate : '';
             incInfo.incidentStatus = this.props.incidentData.incidentStatusObj ? this.props.incidentData.incidentStatusObj : { status: undefined, id: undefined };
             incInfo.incidentCommander = incCommanderObj;
@@ -566,36 +639,47 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 isRoleInEditMode: isRoleInEditMode,
                 teamGroupId: teamGroupId,
                 incidentTypeSearchQuery: this.props.incidentData.incidentType ? this.props.incidentData.incidentType : '',
+
+                //incProductList ProductList
+                incidentProductSearchQuery: this.props.incidentData.incidentProduct ? this.props.incidentData.incidentProduct : '',
+                incidentMitreTacticSearchQuery: this.props.incidentData.incidentMitreTactic ? this.props.incidentData.incidentMitreTactic : '',
+                incidentRiskSearchQuery: this.props.incidentData.incidentRisk ? this.props.incidentData.incidentRisk : '',
+
+
                 dropdownOptions: dropdownOptions,
                 selectedSeverity: constants.severity.indexOf(incInfo.severity) === -1 ? 0 : constants.severity.indexOf(incInfo.severity),
                 isEditMode: true,
                 toggleCloudStorageLocation: incInfo.cloudStorageLink.trim() !== "",
-                selectedLocation: JSON.parse(incInfo.location)
+                selectedLocation: JSON.parse(incInfo.location),
+
+                isViewIncidentProduct: this.props.incidentData.incidentProduct ? true : false,
+                isViewIncidentMitreTactic:  this.props.incidentData.incidentMitreTactic ? true : false,
+                isViewIncidentRisk: this.props.incidentData.incidentRisk ? true : false,
             })
         }
     }
 
     // Update Incident Commander object on change of incident commander
-    private readonly handleIncCommanderChange = (selectedValue: any) => {
+    private handleIncCommanderChange = (selectedValue: any) => {
         let incInfo = { ...this.state.incDetailsItem };
         if (incInfo) {
             let inputValidationObj = this.state.inputValidation;
             let incCommanderHasRegexError = this.state.incCommanderHasRegexError;
-            const selectedIncCommander = [];
+            const selctedIncCommander = [];
             //update selected incident commander object 
             if (selectedValue.detail.length > 0) {
                 inputValidationObj.incidentCommandarHasError = false;
                 // Restrict External users to be added as incident commander
                 if (selectedValue.detail[0].userPrincipalName.match("#EXT#") === null) {
                     incCommanderHasRegexError = false;
-                    selectedIncCommander.push({
-                        displayName: selectedValue.detail[0] ? selectedValue.detail[0].displayName?.replaceAll(",", "") : '',
+                    selctedIncCommander.push({
+                        displayName: selectedValue.detail[0] ? selectedValue.detail[0].displayName.replace(",", "") : '',
                         userPrincipalName: selectedValue.detail[0] ? selectedValue.detail[0].userPrincipalName : '',
                         id: selectedValue.detail[0] ? selectedValue.detail[0].id.includes("@") ? selectedValue.detail[0].id.split("@")[0] : selectedValue.detail[0].id : ''
                     });
                     // create user object for incident commander
                     incInfo.incidentCommander = {
-                        userName: selectedValue.detail[0] ? selectedValue.detail[0].displayName?.replaceAll(",", "") : '',
+                        userName: selectedValue.detail[0] ? selectedValue.detail[0].displayName.replace(",", "") : '',
                         userEmail: selectedValue.detail[0] ? selectedValue.detail[0].userPrincipalName : '',
                         userId: selectedValue.detail[0] ? selectedValue.detail[0].id.includes("@") ? selectedValue.detail[0].id.split("@")[0] : selectedValue.detail[0].id : ''
 
@@ -616,7 +700,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             }
             this.setState({
                 incDetailsItem: incInfo,
-                selectedIncidentCommander: selectedIncCommander,
+                selectedIncidentCommander: selctedIncCommander,
                 inputValidation: inputValidationObj,
                 incCommanderHasRegexError: incCommanderHasRegexError
             });
@@ -624,7 +708,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     };
 
     // on change handler for text input changes
-    private readonly onTextInputChange = (event: any, key: string) => {
+    private onTextInputChange = (event: any, key: string) => {
         let incInfo = { ...this.state.incDetailsItem };
         let inputValidationObj = this.state.inputValidation;
         if (incInfo) {
@@ -692,7 +776,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     }
 
     // on incident type dropdown value change
-    private readonly onIncidentTypeChange = async (_event: any, selectedValue: any) => {
+    private onIncidentTypeChange = async (event: any, selectedValue: any) => {
         //reset roles dropdown values whenever the Incident type is changed
         await this.getDropdownOptions();
 
@@ -832,6 +916,84 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         }
     }
 
+    // on incident product dropdown value change
+    private onIncidentProductChange = async (event: any, selectedValue: any) => {
+        //reset roles dropdown values whenever the Incident type is changed
+        await this.getDropdownOptions();
+
+
+        let incInfo = this.state.incDetailsItem;
+        if (incInfo) {
+            let incInfo = { ...this.state.incDetailsItem };
+            if (incInfo) {
+                incInfo["incidentProduct"] = selectedValue.key;
+                let inputValidationObj = this.state.inputValidation;
+                inputValidationObj.incidentProductHasError = false;
+                inputValidationObj.cloudStorageLinkHasError = false;
+                this.setState({
+                    selectedUsers: [],
+                    selectedLead: [],
+                    incDetailsItem: {
+                        ...incInfo
+                    },
+                    inputValidation: inputValidationObj
+                });
+            }
+        }
+    }
+
+      // on incident Mitre Tactic dropdown value change
+      private onIncidentMitreTacticChange = async (event: any, selectedValue: any) => {
+        //reset roles dropdown values whenever the Incident type is changed
+        await this.getDropdownOptions();
+
+        let incInfo = this.state.incDetailsItem;
+        if (incInfo) {
+            let incInfo = { ...this.state.incDetailsItem };
+            if (incInfo) {
+                incInfo["incidentMitreTactic"] = selectedValue.key;
+                let inputValidationObj = this.state.inputValidation;
+                inputValidationObj.incidentMitreTacticHasError = false;
+                inputValidationObj.cloudStorageLinkHasError = false;
+                this.setState({
+                    selectedUsers: [],
+                    selectedLead: [],
+                    incDetailsItem: {
+                        ...incInfo
+                    },
+                    inputValidation: inputValidationObj
+                });
+            }
+        }
+    }
+
+    
+        // on incident Risk dropdown value change
+        private onIncidentRiskChange = async (event: any, selectedValue: any) => {
+            //reset roles dropdown values whenever the Incident type is changed
+            await this.getDropdownOptions();
+    
+            let incInfo = this.state.incDetailsItem;
+            if (incInfo) {
+                let incInfo = { ...this.state.incDetailsItem };
+                if (incInfo) {
+                    incInfo["incidentRisk"] = selectedValue.key;
+                    let inputValidationObj = this.state.inputValidation;
+                    inputValidationObj.incidentRiskHasError = false;
+                    inputValidationObj.cloudStorageLinkHasError = false;
+                    this.setState({
+                        selectedUsers: [],
+                        selectedLead: [],
+                        incDetailsItem: {
+                            ...incInfo
+                        },
+                        inputValidation: inputValidationObj
+                    });
+                }
+            }
+        }
+    
+
     // on incident status dropdown value change
     private onIncidentStatusChange = (_event: any, selectedValue: any) => {
         let incInfo = this.state.incDetailsItem;
@@ -951,71 +1113,51 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     }
 
     // Update Role Assigned User on change of User in role assignment people picker 
-    private readonly handleAssignedUserChange = async (selectedValue: any) => {
+    private handleAssignedUserChange = (selectedValue: any) => {
         let incInfo = { ...this.state.incDetailsItem };
         let secIncCommanderUserHasRegexError = this.state.secIncCommanderUserHasRegexError;
         const selectedUsersArr: any = [];
         let assignedUsersArray: any = [];
-        let membersData: any = [];
         if (incInfo) {
             //Restrict External users to be added as secondary incident commander or to "Edit Access Role"
             if (this.state.incDetailsItem.selectedRole === constants.secondaryIncidentCommanderRole || this.state.incDetailsItem.selectedRole === this.props.editIncidentAccessRole) {
                 if (selectedValue.detail.length > 0) {
-                    await Promise.all(selectedValue.detail.map(async (user: any) => {
-                        if (this.checkM365GroupOrNot(user)) {
-                            const membersInfo = await this.fetchTeamMembersData(user);
-                            selectedUsersArr.push({
-                                displayName: (user.displayName as string)?.replaceAll(",", ""),
-                                userPrincipalName: user.userPrincipalName,
-                                id: user.id.includes("@") ? user.id.split("@")[0] : user.id
-                            });
-                            membersData = [...membersData, ...membersInfo];
-                        }
-                        else if (user?.userPrincipalName?.match("#EXT#") === null) {
+                    selectedValue.detail.forEach((user: any) => {
+                        if (user?.userPrincipalName.match("#EXT#") === null) {
                             secIncCommanderUserHasRegexError = false;
                             selectedUsersArr.push({
-                                displayName: (user.displayName as string)?.replaceAll(",", ""),
+                                displayName: user.displayName.replace(",", ""),
                                 userPrincipalName: user.userPrincipalName,
                                 id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                             });
                             assignedUsersArray.push({
-                                "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                                "userName": user ? user.displayName.replace(",", "") : "",
                                 "userEmail": user ? user.userPrincipalName : "",
                                 "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                             });
                         }
                         else secIncCommanderUserHasRegexError = true
-                    }));
+                    });
                 }
                 else secIncCommanderUserHasRegexError = false;
                 incInfo["assignedUser"] = assignedUsersArray;
             }
             else {
                 secIncCommanderUserHasRegexError = false;
-                incInfo["assignedUser"] = await Promise.all(selectedValue.detail.map(async (user: any) => {
+                incInfo["assignedUser"] = selectedValue.detail.map((user: any) => {
                     selectedUsersArr.push({
-                        displayName: (user.displayName as string)?.replaceAll(",", ""),
+                        displayName: user.displayName.replace(",", ""),
                         userPrincipalName: user.userPrincipalName,
                         id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                     });
-                    if (this.checkM365GroupOrNot(user)) {
-                        const membersInfo = await this.fetchTeamMembersData(user);
-                        membersData = [...membersData, ...membersInfo];
+                    return {
+                        "userName": user ? user.displayName.replace(",", "") : "",
+                        "userEmail": user ? user.userPrincipalName : "",
+                        "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                     }
-                    else {
-                        return {
-                            "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
-                            "userEmail": user ? user.userPrincipalName : "",
-                            "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
-                        }
-                    }
-                }));
+                });
             }
-            if (incInfo["assignedUser"] === undefined || incInfo["assignedUser"] === null) {
-                incInfo["assignedUser"] = [];
-            }
-            incInfo["assignedUser"] = [...incInfo["assignedUser"], ...membersData];
-            incInfo["assignedUser"] = reject(incInfo["assignedUser"], isNil);
+
             this.setState({
                 incDetailsItem: incInfo, selectedUsers: selectedUsersArr,
                 secIncCommanderUserHasRegexError: secIncCommanderUserHasRegexError
@@ -1024,41 +1166,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             this.checkAddRoleBtnState();
         }
     };
-
-    private readonly checkM365GroupOrNot = (value: { resourceProvisioningOptions: any[], groupTypes: any[] }) => {
-        if (value?.groupTypes?.length > 0) {
-            return value.groupTypes.includes("Unified");
-        }
-        return false;
-    }
-
-    /**
-     * Fetches team members data from the Microsoft Graph API for a given group.
-     *
-     * @param {any} group - The group object containing the group ID.
-     * @returns {Promise<{ userName: string, userEmail: string, userId: string }[]>} - A promise that resolves to an array of objects containing user information.
-     *
-     * @remarks
-     * This method constructs the Graph API endpoint using the group ID and fetches the team members' data.
-     * It then maps the response to extract and format the user information.
-     *
-     * @example
-     * const group = { id: 'group-id' };
-     * const membersInfo = await fetchTeamMembersData(group);
-     * console.log(membersInfo);
-     */
-    private readonly fetchTeamMembersData = async (group: any): Promise<{ userName: string; userEmail: string; userId: string; }[]> => {
-        const graphEndpoint = `${graphConfig.teamGroupsGraphEndpoint}/${group.id}${graphConfig.membersGraphEndpoint}`;
-        const members = await this.dataService.getExistingTeamMembers(graphEndpoint, this.props.graph) as { value: any[] };
-        const membersInfo = members.value.map((member: any) => {
-            return {
-                "userName": (member.displayName as string)?.replaceAll(",", ""),
-                "userEmail": member.userPrincipalName || member.email || "",
-                "userId": member.id?.includes("@") ? member.id.split("@")[0] : member.id
-            }
-        });
-        return membersInfo;
-    }
 
     // Update Role Assigned Lead on change of Lead in role assignment people picker 
     private handleAssignedLeadChange = (selectedValue: any) => {
@@ -1074,12 +1181,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                         if (user?.userPrincipalName?.match("#EXT#") === null) {
                             secIncCommanderLeadHasRegexError = false;
                             selectedRoleLead.push({
-                                displayName: (user.displayName as string)?.replaceAll(",", ""),
+                                displayName: user.displayName.replace(",", ""),
                                 userPrincipalName: user.userPrincipalName,
                                 id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                             });
                             assignedLeadArray.push({
-                                "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                                "userName": user ? user.displayName.replace(",", "") : "",
                                 "userEmail": user ? user.userPrincipalName : "",
                                 "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                             });
@@ -1094,12 +1201,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 secIncCommanderLeadHasRegexError = false;
                 incInfo["assignedLead"] = selectedValue.detail.map((user: any) => {
                     selectedRoleLead.push({
-                        displayName: (user.displayName as string)?.replaceAll(",", ""),
+                        displayName: user.displayName.replace(",", ""),
                         userPrincipalName: user.userPrincipalName,
                         id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                     });
                     return {
-                        "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                        "userName": user ? user.displayName.replace(",", "") : "",
                         "userEmail": user ? user.userPrincipalName : "",
                         "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                     }
@@ -1129,12 +1236,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                         if (user?.userPrincipalName.match("#EXT#") === null) {
                             secIncCommanderLeadInEditModeHasRegexError = false;
                             selectedRoleLead.push({
-                                displayName: (user.displayName as string)?.replaceAll(",", ""),
+                                displayName: user.displayName.replace(",", ""),
                                 userPrincipalName: user.userPrincipalName,
                                 id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                             });
                             assignedLeadArray.push({
-                                "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                                "userName": user ? user.displayName.replace(",", "") : "",
                                 "userEmail": user ? user.userPrincipalName : "",
                                 "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                             });
@@ -1149,12 +1256,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 secIncCommanderLeadInEditModeHasRegexError = false
                 incInfo["assignedLead"] = selectedValue.detail.map((user: any) => {
                     selectedRoleLead.push({
-                        displayName: (user.displayName as string)?.replaceAll(",", ""),
+                        displayName: user.displayName.replace(",", ""),
                         userPrincipalName: user.userPrincipalName,
                         id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                     });
                     return {
-                        "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                        "userName": user ? user.displayName.replace(",", "") : "",
                         "userEmail": user ? user.userPrincipalName : "",
                         "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                     }
@@ -1182,12 +1289,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                         if (user?.userPrincipalName.match("#EXT#") === null) {
                             secIncCommanderUserInEditModeHasRegexError = false;
                             selectedUsersArr.push({
-                                displayName: (user.displayName as string)?.replaceAll(",", ""),
+                                displayName: user.displayName.replace(",", ""),
                                 userPrincipalName: user.userPrincipalName,
                                 id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                             });
                             assignedUsersArray.push({
-                                "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                                "userName": user ? user.displayName.replace(",", "") : "",
                                 "userEmail": user ? user.userPrincipalName : "",
                                 "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                             });
@@ -1202,12 +1309,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 secIncCommanderUserInEditModeHasRegexError = false;
                 incInfo["assignedUser"] = selectedValue.detail.map((user: any) => {
                     selectedUsersArr.push({
-                        displayName: (user.displayName as string)?.replaceAll(",", ""),
+                        displayName: user.displayName.replace(",", ""),
                         userPrincipalName: user.userPrincipalName,
                         id: user.id.includes("@") ? user.id.split("@")[0] : user.id
                     });
                     return {
-                        "userName": user ? (user.displayName as string)?.replaceAll(",", "") : "",
+                        "userName": user ? user.displayName.replace(",", "") : "",
                         "userEmail": user ? user.userPrincipalName : "",
                         "userId": user ? user.id.includes("@") ? user.id.split("@")[0] : user.id : "",
                     }
@@ -1222,7 +1329,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     };
 
     // update the role assignment array
-    private readonly addRoleAssignment = () => {
+    private addRoleAssignment = () => {
         let roleAssignment = [...this.state.roleAssignments];
         let userDetailsObj: any = [];
         let userNameString = "";
@@ -1230,73 +1337,60 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         let leadNameString = "";
         let leadObjString = "";
         let leadDetailsObj: any = [];
-        // Getting Existing Owners
-        let { ownerArr }: { ownerArr: any[]; } = this.retrieveIncidentInfo();
-        // Merging Existing and new owners to one array
-        if (
-            this.state.incDetailsItem.selectedRole === constants.secondaryIncidentCommanderRole ||
-            this.state.incDetailsItem.selectedRole === this.props.editIncidentAccessRole
-        ) {
-            ownerArr = [...ownerArr, ...this.state.incDetailsItem.assignedUser.map(user => `${this.state.graphContextURL}${graphConfig.usersGraphEndpoint}/${user.userId}`), ...this.state.incDetailsItem.assignedLead.map(user => `${this.state.graphContextURL}${graphConfig.usersGraphEndpoint}/${user.userId}`)];
-        }
-        const uniqOwners = uniq(ownerArr);
-        this.props.hideMessageBar();
-        if (uniqOwners.length > constants.ownerLimitPerTeams) {
-            this.scrollToTop();
-            this.props.showMessageBar(this.props.localeStrings.ownerLimitMessage, "error");
-        } else {
-            // push roles into array to create role object
-            this.state.incDetailsItem.assignedUser.forEach(assignedUser => {
-                userNameString += assignedUser.userName + ", ";
-                userObjString += assignedUser.userName + "|" + assignedUser.userId + "|" + assignedUser.userEmail + ", ";
-                userDetailsObj.push({
-                    userName: assignedUser.userName,
-                    userEmail: assignedUser.userEmail,
-                    userId: assignedUser.userId,
-                });
+        // push roles into array to create role object
+        this.state.incDetailsItem.assignedUser.forEach(assignedUser => {
+            userNameString += assignedUser.userName + ", ";
+            userObjString += assignedUser.userName + "|" + assignedUser.userId + "|" + assignedUser.userEmail + ", ";
+            userDetailsObj.push({
+                userName: assignedUser.userName,
+                userEmail: assignedUser.userEmail,
+                userId: assignedUser.userId,
             });
-            userNameString = userNameString.trim();
-            userNameString = userNameString.slice(0, -1);
+        });
+        userNameString = userNameString.trim();
+        userNameString = userNameString.slice(0, -1);
 
-            userObjString = userObjString.trim();
-            userObjString = userObjString.slice(0, -1);
+        userObjString = userObjString.trim();
+        userObjString = userObjString.slice(0, -1);
 
-            this.state.incDetailsItem.assignedLead.forEach(assignedLead => {
-                leadNameString = assignedLead.userName;
-                leadObjString = assignedLead.userName + "|" + assignedLead.userId + "|" + assignedLead.userEmail;
-                leadDetailsObj.push({
-                    userName: assignedLead.userName,
-                    userEmail: assignedLead.userEmail,
-                    userId: assignedLead.userId,
-                });
+        this.state.incDetailsItem.assignedLead.forEach(assignedLead => {
+            leadNameString = assignedLead.userName;
+            leadObjString = assignedLead.userName + "|" + assignedLead.userId + "|" + assignedLead.userEmail;
+            leadDetailsObj.push({
+                userName: assignedLead.userName,
+                userEmail: assignedLead.userEmail,
+                userId: assignedLead.userId,
             });
+        });
 
-            roleAssignment.push({
-                role: this.state.incDetailsItem.selectedRole,
-                userNamesString: userNameString,
-                userObjString: userObjString,
-                userDetailsObj: userDetailsObj,
-                leadNameString: leadNameString,
-                leadObjString: leadObjString,
-                leadDetailsObj: leadDetailsObj,
-                saveDefault: this.state.saveDefaultRoleCheck
-            })
+        roleAssignment.push({
+            role: this.state.incDetailsItem.selectedRole,
+            userNamesString: userNameString,
+            userObjString: userObjString,
+            userDetailsObj: userDetailsObj,
+            leadNameString: leadNameString,
+            leadObjString: leadObjString,
+            leadDetailsObj: leadDetailsObj,
+            saveDefault: this.state.saveDefaultRoleCheck
+        })
 
-            const isRoleInEditMode = [...this.state.isRoleInEditMode];
-            isRoleInEditMode.push(false);
+        const isRoleInEditMode = [...this.state.isRoleInEditMode];
+        isRoleInEditMode.push(false);
 
-            let roleOptions = this.state.dropdownOptions["roleOptions"].filter((role: string) => role !== this.state.incDetailsItem.selectedRole)
+        let roleOptions = this.state.dropdownOptions["roleOptions"].filter((role: string) => role !== this.state.incDetailsItem.selectedRole)
 
-            const dropdownOptions = this.state.dropdownOptions;
-            dropdownOptions["roleOptions"] = roleOptions;
+        const dropdownOptions = this.state.dropdownOptions;
+        dropdownOptions["roleOptions"] = roleOptions;
 
-            // clear roles control values
-            let incInfoCopy = { ...this.state.incDetailsItem };
-            if (incInfoCopy) {
-                incInfoCopy["selectedRole"] = "";
+        // clear roles control values
+        let incInfo = this.state.incDetailsItem;
+        if (incInfo) {
+            let incInfo = { ...this.state.incDetailsItem };
+            if (incInfo) {
+                incInfo["selectedRole"] = "";
                 this.setState({
                     roleAssignments: roleAssignment,
-                    incDetailsItem: incInfoCopy,
+                    incDetailsItem: incInfo,
                     isRoleInEditMode: isRoleInEditMode,
                     selectedUsers: [],
                     selectedLead: [],
@@ -1307,10 +1401,10 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     secIncCommanderUserHasRegexError: false
                 })
             }
-            this.setState({
-                roleAddSuccessMessage: constants.addRoleMessage
-            })
         }
+        this.setState({
+            roleAddSuccessMessage: constants.addRoleMessage
+        })
     }
 
     // change add role assignment button disable state
@@ -1650,7 +1744,9 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     }
 
     // create new entry in incident transaction list
-    private readonly createNewIncident = async () => {
+    private createNewIncident = async () => {
+        debugger;
+
         this.scrollToTop();
         // incident info object
         let incidentInfo: IncidentEntity = this.state.incDetailsItem;
@@ -1708,6 +1804,11 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                                 Title: incidentInfo.incidentName,
                                 Description: incidentInfo.incidentDesc,
                                 IncidentType: incidentInfo.incidentType,
+
+                                IncidentProduct: incidentInfo.incidentProduct, // incident product
+                                IncidentMitreTactic: incidentInfo.incidentMitreTactic, 
+                                IncidentRisk: incidentInfo.incidentRisk, 
+
                                 StatusLookupId: incidentInfo.incidentStatus.id,
                                 StartDateTime: incidentInfo.startDateTime,
                                 Location: JSON.stringify(this.state.selectedLocation),
@@ -1719,6 +1820,8 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                                 CloudStorageLink: this.state.toggleCloudStorageLocation ? incidentInfo.cloudStorageLink.trim() : ""
                             }
                         }
+
+                        debugger;
 
                         this.graphEndpoint = `${graphConfig.spSiteGraphEndpoint}${this.props.siteId}${graphConfig.listsGraphEndpoint}/${siteConfig.incidentsList}/items`;
                         this.setState({
@@ -2000,7 +2103,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                             });
                             this.props.showMessageBar(this.props.localeStrings.genericErrorMessage + ", " + this.props.localeStrings.errMsgForUpdateIncident, constants.messageBarType.error);
                         }
-                    } catch (error: any) {
+                    } catch (error) {
                         console.error(
                             constants.errorLogPrefix + "UpdateIncident_UpdateIncident \n",
                             JSON.stringify(error)
@@ -2011,11 +2114,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                             showLoader: false,
                             formOpacity: 1
                         });
-                        if (error?.message?.toLowerCase() === constants.ownerLimitReachedErrorMessage.toLowerCase()) {
-                            this.props.showMessageBar(`${this.props.localeStrings.genericErrorMessage}, ${this.props.localeStrings.ownerLimitMessage}`, constants.messageBarType.error);
-                        } else {
-                            this.props.showMessageBar(this.props.localeStrings.genericErrorMessage + ", " + this.props.localeStrings.errMsgForUpdateIncident, constants.messageBarType.error);
-                        }
+                        this.props.showMessageBar(this.props.localeStrings.genericErrorMessage + ", " + this.props.localeStrings.errMsgForUpdateIncident, constants.messageBarType.error);
                     }
                 }
             } catch (error) {
@@ -2037,9 +2136,26 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
             (incidentInfo.incidentName !== undefined && incidentInfo.incidentName.trim() === "")) {
             inputValidationObj.incidentNameHasError = true;
         }
+
+        //Incident Product
+        // enable product dropdown based on state
+        debugger;
+        if (  this.state.isViewIncidentProduct  ===true && (incidentInfo.incidentProduct === "" || incidentInfo.incidentProduct === undefined || incidentInfo.incidentProduct === null)) {
+            inputValidationObj.incidentProductHasError = true;
+        }
+
+        if ( this.state.isViewIncidentMitreTactic  ===true &&(incidentInfo.incidentMitreTactic === "" || incidentInfo.incidentMitreTactic === undefined || incidentInfo.incidentMitreTactic === null)) {
+            inputValidationObj.incidentMitreTacticHasError = true;
+        }
+
+        if ( this.state.isViewIncidentRisk ===true && (incidentInfo.incidentRisk === "" || incidentInfo.incidentRisk === undefined || incidentInfo.incidentRisk === null)) {
+            inputValidationObj.incidentRiskHasError = true;
+        }
+
         if (incidentInfo.incidentType === "" || incidentInfo.incidentType === undefined || incidentInfo.incidentType === null) {
             inputValidationObj.incidentTypeHasError = true;
         }
+
         if (incidentInfo.startDateTime === "" || incidentInfo.startDateTime === undefined) {
             inputValidationObj.incidentStartDateTimeHasError = true;
         }
@@ -2083,7 +2199,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         if (inputValidationObj.incidentNameHasError || inputValidationObj.incidentTypeHasError ||
             inputValidationObj.incidentStartDateTimeHasError || inputValidationObj.incidentStatusHasError || inputValidationObj.incidentDescriptionHasError ||
             inputValidationObj.incidentCommandarHasError || inputValidationObj.incidentLocationHasError || inputValidationObj.incidentReasonForUpdateHasError ||
-            inputValidationObj.cloudStorageLinkHasError || inputValidationObj.guestUsersHasError ||
+            inputValidationObj.cloudStorageLinkHasError || inputValidationObj.guestUsersHasError || inputValidationObj.incidentProductHasError || inputValidationObj.incidentMitreTacticHasError || inputValidationObj.incidentRiskHasError ||
             (incidentInfo.guestUsers?.filter((user) =>
                 (user.hasDisplayNameValidationError || user.hasEmailValidationError)).length > 0)) {
             this.setState({
@@ -2106,7 +2222,20 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     private setFocusAfterValidation = (inputValidationObj: any) => {
         if (inputValidationObj.incidentNameHasError) {
             this.incidentName.current?.focus();
-        } else if (inputValidationObj.incidentTypeHasError) {
+        }
+        // incident product
+        else if (inputValidationObj.incidentProductHasError) {
+            this.incidentProduct.current?.querySelector("input").focus();
+        }
+        else if (inputValidationObj.incidentMitreTacticHasError) {
+            this.incidentMitreTactic.current?.querySelector("input").focus();
+        
+        } 
+        else if (inputValidationObj.incidentRiskHasError) {
+            this.incidentRisk.current?.querySelector("input").focus();
+        
+        }
+        else if (inputValidationObj.incidentTypeHasError) {
             this.incidentType.current?.querySelector("input").focus();
         } else if (inputValidationObj.incidentStartDateTimeHasError) {
             this.incidentStartDateTime.current?.querySelector("input").focus();
@@ -2123,7 +2252,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
 
 
     //delay the operation by adding timeout
-    private readonly timeOut = (delay: number): Promise<any> => {
+    private timeout = (delay: number): Promise<any> => {
         return new Promise(res => setTimeout(res, delay));
     }
 
@@ -2157,18 +2286,8 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                         groupInfo.id, constants.General);
 
                     //Create planner with the Group ID                        
-                    const plannerDetails = await this.dataService.createPlannerPlan(groupInfo.id, incidentId, this.props.graph,this.props.siteId, siteConfig.roleAssignmentList,
+                    const planID = await this.dataService.createPlannerPlan(groupInfo.id, incidentId, this.props.graph,
                         this.props.graphContextURL, this.props.tenantID, generalChannelId, false);
-
-                    //Get Plan ID and ToDO bucket ID to create default tasks
-                    const planID = plannerDetails?.planId;
-                    const toDoBucketID = plannerDetails?.toDoBucketId;
-
-                    //Create default tasks if the "Create Default Tasks" Toggle is selected
-                    if (this.state.toggleDefaultTasks) {
-                        if (planID && toDoBucketID)
-                            await this.dataService.createdefaultPlannerTasks(planID, toDoBucketID, this.props.graph, this.props.siteId, siteConfig.defaulTasksList, this.state.incDetailsItem.incidentType);
-                    }
 
                     //Add TEOC app to the Incident Team General channel's Active Dashboard Tab
                     await this.dataService.createActiveDashboardTab(this.props.graph, groupInfo.id,
@@ -2177,7 +2296,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     //added for GCCH tenant
                     if (this.props.graphBaseUrl !== constants.defaultGraphBaseURL) {
                         // wait for 5 seconds to ensure the SharePoint site is available via graph API
-                        await this.timeOut(5000);
+                        await this.timeout(5000);
                     }
 
                     // graph endpoint to get team site Id
@@ -2655,68 +2774,112 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     }
 
     // create a Teams group
-    private readonly createTeamGroup = async (incId: string) => {
+    private createTeamGroup = async (incId: string) => {
         try {
             this.setState({
                 loaderMessage: this.props.localeStrings.createGroupLoaderMessage
             });
-            const { incDetails, ownerArr, membersArr }: { incDetails: IncidentEntity; ownerArr: string[]; membersArr: string[]; } = this.retrieveIncidentInfo();
+            let incDetails = this.state.incDetailsItem;
+            // update the date format
+            incDetails.startDateTime = moment(this.state.incDetailsItem.startDateTime).format("DDMMMYYYY");
+
+            // create an array for owners and members
+            const ownerArr: any = [];
+            const membersArr: any = [];
+
+            //adding Incident Commander as Owner and Member to the group
+            ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + incDetails.incidentCommander.userId);
+            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + incDetails.incidentCommander.userId);
+
+            this.state.roleAssignments.forEach(roles => {
+                //adding users of secondary incident commander role and "Edit Access Role" as owners and members
+                if (roles.role === constants.secondaryIncidentCommanderRole || roles.role === this.props.editIncidentAccessRole) {
+                    roles.userDetailsObj.forEach(user => {
+                        if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
+                            ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
+                        }
+                        if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
+                            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
+                        }
+                    });
+                    if (roles.leadDetailsObj !== undefined) {
+                        roles.leadDetailsObj.forEach(lead => {
+                            if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
+                                ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
+                            }
+                            if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
+                                membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
+                            }
+                        });
+                    }
+                } // adding users of other roles in role assignments as members
+                else {
+                    roles.userDetailsObj.forEach(user => {
+                        if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
+                            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
+                        }
+                    });
+                    if (roles.leadDetailsObj !== undefined) {
+                        roles.leadDetailsObj.forEach(lead => {
+                            if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
+                                membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
+                            }
+                        });
+                    }
+                }
+            });
+
+
+            // add current user as a owner if already not present so that we can perform teams creation
+            // and sharepoint site related operations on associated team site
+            if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId) === -1) {
+                ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId);
+            }
+
+            // add current user as a member to be able to create planner plan. 
+            if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId) === -1) {
+                membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId)
+            }
 
             //format team display name
-            const teamDisplayName = this.formatTeamDisplayName(incId, incDetails);
-            const mailNickName = `${constants.teamEOCPrefix}_${incId}`;
+            let teamDisplayName = this.formatTeamDisplayName(incId, incDetails);
             let groupVisibility = this.props.graphBaseUrl === constants.defaultGraphBaseURL ? "Private" : "Public"
-            let incidentobj = {};
-            const limitPerRequest = 10;
-            if (ownerArr.length >= limitPerRequest || (ownerArr.length + membersArr.length) >= limitPerRequest) {
-                // create object to create group with owners in chunks then add Members
-                const groupResponse = await this.addOwnersAndMembers(ownerArr, limitPerRequest, teamDisplayName, incDetails, groupVisibility, mailNickName, membersArr);
+
+            if (membersArr.length > 0) {
+                // create object to create teams group
+                //update display name based on team name configuration
+                let incidentobj = {
+                    displayName: teamDisplayName,
+                    mailNickname: `${constants.teamEOCPrefix}_${incId}`,
+                    description: incDetails.incidentDesc,
+                    visibility: groupVisibility,
+                    groupTypes: ["Unified"],
+                    mailEnabled: true,
+                    securityEnabled: true,
+                    "members@odata.bind": membersArr,
+                    "owners@odata.bind": ownerArr
+                }
+
+                // call method to create team group
+                let groupResponse = await this.dataService.sendGraphPostRequest(graphConfig.teamGroupsGraphEndpoint, this.props.graph, incidentobj);
                 return groupResponse;
             }
             else {
-                // add current user as a owner if already not present so that we can perform teams creation
-                // and sharepoint site related operations on associated team site
-                if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId) === -1) {
-                    ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId);
-                }
-
-                // add current user as a member to be able to create planner plan. 
-                if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId) === -1) {
-                    membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId)
-                }
-
                 // create object to create teams group
-                incidentobj = this.incidentObject(teamDisplayName, incDetails.incidentDesc, groupVisibility, mailNickName, ownerArr);
-                if (membersArr.length > 0) {
-                    if (membersArr.length > limitPerRequest) {
-                        const membersArrInChunk = chunk(membersArr, limitPerRequest);
-                        let groupResponse: any;
-                        // create object to create teams group
-                        //update display name based on team name configuration
-                        incidentobj = this.incidentObject(teamDisplayName, incDetails.incidentDesc, groupVisibility, mailNickName, ownerArr, membersArrInChunk[0]);
-                        groupResponse = await this.dataService.sendGraphPostRequest(graphConfig.teamGroupsGraphEndpoint, this.props.graph, incidentobj);
-                        const promiseObject = membersArrInChunk.map(async (members: any[], index: number) => {
-                            if (index > 0) {
-                                const addMemberEndpoint = graphConfig.teamGroupsGraphEndpoint + "/" + groupResponse.id;
-                                const memberObject = {
-                                    "members@odata.bind": members,
-                                }
-                                await this.dataService.sendGraphPatchRequest(addMemberEndpoint, this.props.graph, memberObject);
-                            }
-                        });
-                        await Promise.all(promiseObject);
-                        return groupResponse;
-                    } else {
-                        // create object to create teams group
-                        //update display name based on team name configuration
-                        incidentobj = this.incidentObject(teamDisplayName, incDetails.incidentDesc, groupVisibility, mailNickName, ownerArr, membersArr);
-                    }
+                let incidentobj = {
+                    displayName: teamDisplayName, // `${constants.teamEOCPrefix}-${incId}-${incDetails.incidentType}-${incDetails.startDateTime}`,
+                    mailNickname: `${constants.teamEOCPrefix}_${incId}`,
+                    description: incDetails.incidentDesc,
+                    visibility: groupVisibility,
+                    groupTypes: ["Unified"],
+                    mailEnabled: true,
+                    securityEnabled: true,
+                    "owners@odata.bind": ownerArr
                 }
                 // call method to create team group
-                const groupResponse = await this.dataService.sendGraphPostRequest(graphConfig.teamGroupsGraphEndpoint, this.props.graph, incidentobj);
+                let groupResponse = await this.dataService.sendGraphPostRequest(graphConfig.teamGroupsGraphEndpoint, this.props.graph, incidentobj);
                 return groupResponse;
             }
-
         }
         catch (ex: any) {
             console.error(
@@ -2729,45 +2892,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
 
             throw ex;
         }
-    }
-
-    /**
-     * Creates an object representing an incident to create a Teams group.
-     *
-     * @param teamDisplayName - The display name of the team.
-     * @param description - A description of the incident.
-     * @param groupVisibility - The visibility of the group (e.g., "Public" or "Private").
-     * @param mailNickname - The mail nickname for the group.
-     * @param ownerArray - An array of owners for the group.
-     * @param memberArray - An optional array of members for the group.
-     * @returns An object containing the details required to create a Teams group.
-     */
-    private readonly incidentObject = (teamDisplayName: string, description: string, groupVisibility: string, mailNickname: string, ownerArray: any[], memberArray: any[] = []) => {
-        // create object to create teams group
-        const incidentObj: {
-            displayName: string,
-            mailNickname: string,
-            description: string,
-            visibility: string,
-            groupTypes: string[],
-            mailEnabled: boolean,
-            securityEnabled: boolean,
-            "owners@odata.bind": any[],
-            "members@odata.bind"?: any[]
-        } = {
-            displayName: teamDisplayName,
-            mailNickname: mailNickname,
-            description: description,
-            visibility: groupVisibility,
-            groupTypes: ["Unified"],
-            mailEnabled: true,
-            securityEnabled: true,
-            "owners@odata.bind": ownerArray
-        }
-        if (memberArray.length > 0) {
-            incidentObj["members@odata.bind"] = memberArray;
-        }
-        return incidentObj;
     }
 
     //format team display name
@@ -2847,18 +2971,14 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         //creating an array of new secondary commanders,"Edit Access Role" users and role users
         const newRoleUsers: any = [];
         const newSecondaryCommanders: any = [];
-        // creating an array of new secondary commanders containing only user Ids
-        const newSecondaryCommandersUserId: any[] = [];
         this.state.roleAssignments.forEach((role: any) => {
             if (role.role === constants.secondaryIncidentCommanderRole || role.role === this.props.editIncidentAccessRole) {
                 role.userDetailsObj.forEach((user: any) => {
                     newSecondaryCommanders.push({ role: role.role, userId: user.userId });
-                    newSecondaryCommandersUserId.push(user.userId);
                 })
                 if (role.leadDetailsObj !== undefined) {
                     role.leadDetailsObj.forEach((lead: any) => {
                         newSecondaryCommanders.push({ role: role.role, userId: lead.userId });
-                        newSecondaryCommandersUserId.push(lead.userId);
                     })
                 }
             } else {
@@ -2938,10 +3058,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 if (user === newUser.userId)
                     isFound = true;
             });
-            // check current user exist in secondary commanders user ids or not
-            if (newSecondaryCommandersUserId.indexOf(user) > -1) {
-                isFound = true;
-            }
             if (!isFound) {
                 removedUsers.push(user);
             }
@@ -2980,128 +3096,6 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
 
             return usersObj;
         }
-    }
-
-    /**
-     * Adds owners and members to a Microsoft Teams group.
-     *
-     * @param groupOwnersList - List of group owners' URLs.
-     * @param limitPerRequest - Maximum number of owners/members to add per request.
-     * @param teamDisplayName - Display name of the team.
-     * @param incDetails - Incident details object.
-     * @param groupVisibility - Visibility of the group (e.g., public or private).
-     * @param mailNickName - Mail nickname for the group.
-     * @param groupMembersList - List of group members' URLs.
-     * @returns The response from the group creation request.
-     */
-    private async addOwnersAndMembers(groupOwnersList: string[], limitPerRequest: number, teamDisplayName: string, incDetails: IncidentEntity, groupVisibility: string, mailNickName: string, groupMembersList: string[]) {
-        const currentUserUrl = this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + this.props.currentUserId;
-        let sortedOwners = [...groupOwnersList].sort((a, b) => {
-            if (a === currentUserUrl) return -1;
-            if (b === currentUserUrl) return 1;
-            return 0;
-        });
-        if (sortedOwners.indexOf(currentUserUrl) === -1) {
-            sortedOwners = [currentUserUrl, ...sortedOwners];
-        }
-        const chunkedOwnerArray = chunk(sortedOwners, limitPerRequest);
-        const firstOwnerBatch = chunkedOwnerArray[0];
-        // create object to create teams group
-        let incidentobj = this.incidentObject(teamDisplayName, incDetails.incidentDesc, groupVisibility, mailNickName, firstOwnerBatch);
-        let groupResponse = await this.dataService.sendGraphPostRequest(graphConfig.teamGroupsGraphEndpoint, this.props.graph, incidentobj);
-        for (let index = 1; index < chunkedOwnerArray.length; index++) {
-            const owners = chunkedOwnerArray[index];
-            const addOwnerEndpoint = graphConfig.teamGroupsGraphEndpoint + "/" + groupResponse.id;
-            const ownerObject = {
-                "owners@odata.bind": owners
-            };
-            await this.dataService.sendGraphPatchRequest(addOwnerEndpoint, this.props.graph, ownerObject);
-            // To make sure it is not exceeding Per Minute Limit of the API
-            await this.timeOut(500);
-        }
-        if (groupMembersList.indexOf(currentUserUrl) === -1) {
-            groupMembersList.push(currentUserUrl);
-        }
-        const chunkedMembersArray = chunk(groupMembersList, limitPerRequest);
-        for (const members of chunkedMembersArray) {
-            const memberObj = {
-                "members@odata.bind": members
-            };
-            await this.dataService.sendGraphPatchRequest(`${graphConfig.teamGroupsGraphEndpoint}/${groupResponse.id}`, this.props.graph, memberObj);
-            // To make sure it is not exceeding Per Minute Limit of the API
-            await this.timeOut(500);
-        }
-        return groupResponse;
-    }
-
-    /**
-     * Retrieves incident information including details, owners, and members.
-     * 
-     * This method performs the following tasks:
-     * - Updates the date format of the incident's start date.
-     * - Creates arrays for owners and members based on role assignments.
-     * - Adds the Incident Commander as both an owner and a member.
-     * - Adds users with the secondary incident commander role and "Edit Access Role" as owners and members.
-     * - Adds users of other roles as members.
-     * 
-     * @returns {Object} An object containing the updated incident details, owner array, and members array.
-     * @property {Object} incDetails - The updated incident details.
-     * @property {Array} ownerArr - An array of owner user URLs.
-     * @property {Array} membersArr - An array of member user URLs.
-     */
-    private retrieveIncidentInfo(): { incDetails: IncidentEntity, ownerArr: string[], membersArr: string[] } {
-        let incDetails = this.state.incDetailsItem;
-        // update the date format
-        incDetails.startDateTime = moment(this.state.incDetailsItem.startDateTime).format("DDMMMYYYY");
-
-        // create an array for owners and members
-        const ownerArr: string[] = [];
-        const membersArr: string[] = [];
-
-        if (incDetails?.incidentCommander?.userId) {
-            //adding Incident Commander as Owner and Member to the group
-            ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + incDetails?.incidentCommander?.userId);
-            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + incDetails?.incidentCommander?.userId);
-        }
-
-        this.state.roleAssignments.forEach(roles => {
-            //adding users of secondary incident commander role and "Edit Access Role" as owners and members
-            if (roles.role === constants.secondaryIncidentCommanderRole || roles.role === this.props.editIncidentAccessRole) {
-                roles.userDetailsObj.forEach(user => {
-                    if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
-                        ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
-                    }
-                    if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
-                        membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
-                    }
-                });
-                if (roles.leadDetailsObj !== undefined) {
-                    roles.leadDetailsObj.forEach(lead => {
-                        if (ownerArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
-                            ownerArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
-                        }
-                        if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
-                            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
-                        }
-                    });
-                }
-            } // Adding users of other roles in role assignments as members
-            else {
-                roles.userDetailsObj.forEach(user => {
-                    if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId) === -1) {
-                        membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + user.userId);
-                    }
-                });
-                if (roles.leadDetailsObj !== undefined) {
-                    roles.leadDetailsObj.forEach(lead => {
-                        if (membersArr.indexOf(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId) === -1) {
-                            membersArr.push(this.state.graphContextURL + graphConfig.usersGraphEndpoint + "/" + lead.userId);
-                        }
-                    });
-                }
-            }
-        });
-        return { incDetails, ownerArr, membersArr };
     }
 
     // remove users from Teams members
@@ -3148,8 +3142,8 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         return new Promise(async (resolve, reject) => {
             this.graphEndpoint = graphConfig.teamsGraphEndpoint + "/" + this.state.teamGroupId + graphConfig.addMembersGraphEndpoint;
 
-            const usersToAdd: any[] = [];
-            const uniqueUserArray: any[] = [];
+            const usersToAdd: any = [];
+            const uniqueUserArray: any = [];
 
             if (isOwner) {
                 userIds.forEach((user: any) => {
@@ -3178,20 +3172,12 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 });
             }
 
+            const memmbersObj = {
+                "values": usersToAdd
+            }
 
             try {
-                const limitToAddUsers = 10;
-                const usersToAddInChunk = chunk(usersToAdd, limitToAddUsers);
-                let usersAdded: any[] = [];
-                for (const chunkedUsersToAdd of usersToAddInChunk) {
-                    const membersObj = {
-                        "values": chunkedUsersToAdd
-                    }
-                    const currentSetUsersAdded = await this.dataService.sendGraphPostRequest(this.graphEndpoint, this.props.graph, membersObj);
-                    usersAdded = usersAdded.concat(currentSetUsersAdded.value);
-                    // To make sure it is not exceeding Per Minute Limit of the API
-                    await this.timeOut(500);
-                }
+                const usersAdded = await this.dataService.sendGraphPostRequest(this.graphEndpoint, this.props.graph, memmbersObj);
                 resolve(usersAdded);
             } catch (ex) {
                 console.error(
@@ -3313,7 +3299,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     }
                 }
                 maxTeamCreationAttempt--;
-                await this.timeOut(5000);
+                await this.timeout(5000);
             }
             console.log(constants.infoLogPrefix + "createTeam_No Of Attempt", (15 - maxTeamCreationAttempt), result);
             resolve(result);
@@ -3592,8 +3578,8 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                         "websiteUrl": null
                     }
                 }
-                // Add max retry logic for tab creation to handle Teams Graph API limitations
-                await this.dataService.sendGraphPostRequest(tabGraphEndpoint, this.props.graph, assessmentTabObj, 3);
+
+                await this.dataService.sendGraphPostRequest(tabGraphEndpoint, this.props.graph, assessmentTabObj);
                 console.log(constants.infoLogPrefix + "Ground Assessments tab is added to the Assessment channel");
                 resolve({
                     status: true,
@@ -3641,8 +3627,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                 const addTabGraphEndpoint = graphConfig.teamsGraphEndpoint + "/" + team_info.id + graphConfig.channelsGraphEndpoint + "/" + channelResult.id + graphConfig.tabsGraphEndpoint;
 
                 // calling a generic method which is send a post query to the graph endpoint
-                // Add max retry logic for tab creation to handle Teams Graph API limitations
-                const tabResult = await this.dataService.sendGraphPostRequest(addTabGraphEndpoint, this.props.graph, addTabObj, 3);
+                const tabResult = await this.dataService.sendGraphPostRequest(addTabGraphEndpoint, this.props.graph, addTabObj);
                 console.log(constants.infoLogPrefix + "News tab is added to the Announcements channel");
                 resolve(tabResult.webUrl);
             } catch (ex) {
@@ -3697,11 +3682,11 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     // loop through selected roles and create tag object
     private async createTagObject(teamId: any, roles: any): Promise<any> {
 
-        const result = {
+        let result: any = {
             isFullyCreated: false,
             isPartiallyCreated: false,
-            failedEntries: Array<any>(),
-            successEntries: Array<any>(),
+            failedEntries: [],
+            successEntries: []
         };
 
         this.setState({
@@ -3711,17 +3696,16 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         return new Promise(async (resolve, reject) => {
             let allDone = false;
             let counter = 0;
-            const limitToAddUsers = 24;
 
             if (roles.length > 0) {
                 while (!allDone) {
                     let role = roles[counter];
                     try {
                         this.graphEndpoint = graphConfig.teamsGraphEndpoint + "/" + teamId + graphConfig.tagsGraphEndpoint;
-                        const members: { userId: string }[] = [];
+                        const members: any = [];
                         role.userDetailsObj.forEach((users: any) => {
                             members.push({
-                                userId: users.userId
+                                "userId": users.userId
                             })
                         });
                         if (role.leadDetailsObj !== undefined) {
@@ -3733,41 +3717,13 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                                 }
                             });
                         }
-                        const membersChunk = chunk(members, limitToAddUsers);
-                        const firstSet = membersChunk[0];
                         const tagObj = {
                             "displayName": role.role,
-                            "members": firstSet
+                            "members": members
                         }
-                        let createdTag = await this.createTag(this.graphEndpoint, tagObj);
-                        if (createdTag?.status) {
-                            const addTagsToUser = `${graphConfig.teamsGraphEndpoint}/${teamId}${graphConfig.tagsGraphEndpoint}/${createdTag.data.id}${graphConfig.membersGraphEndpoint}`;
-                            for (let index = 1; index < membersChunk.length; index++) {
-                                const currentListOfMembers = membersChunk[index];
-                                const settledPromises = await Promise.allSettled(currentListOfMembers.map((member) =>
-                                    this.dataService.sendGraphPostRequest(addTagsToUser, this.props.graph, member)
-                                ));
+                        let createdTag = await this.createTag(this.graphEndpoint, tagObj)
 
-                                settledPromises.forEach((settledPromise, index) => {
-                                    if (settledPromise.status === 'rejected') {
-                                        console.error(
-                                            `${constants.errorLogPrefix} Error adding member with ID ${currentListOfMembers[index].userId} to tag ${role.role} in CreateIncident_CreateTag \n`,
-                                            settledPromise.reason
-                                        );
-                                        result.failedEntries.push({
-                                            tagName: role.role,
-                                            userId: currentListOfMembers[index].userId
-                                        });
-                                    } else {
-                                        result.successEntries.push({
-                                            tagName: role.role,
-                                            userId: currentListOfMembers[index].userId
-                                        });
-                                    }
-                                });
-                                // To make sure it is not exceeding Per Minute Limit for the API
-                                await this.timeOut(500);
-                            }
+                        if (createdTag && createdTag.status) {
                             // set tag object
                             let tagCreationObj: any = {
                                 tagName: role.role,
@@ -3803,8 +3759,7 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     allDone = roles.length === counter;
                 }
             }
-            result.isFullyCreated = result.failedEntries.length === 0;
-            console.info("Tag Object result", result);
+            result.isFullyCreated = result.failedEntries.length === 0 ? true : false;
             resolve(result);
         });
     }
@@ -4064,6 +4019,32 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
         }
     }
 
+    //On click of 'Add category' button add a new Channel Input control
+    private addCategory() {
+
+        if (!this.state.isViewIncidentProduct) {
+            this.setState({ isViewIncidentProduct: true });
+        }
+        else if (!this.state.isViewIncidentMitreTactic) {
+            this.setState({ isViewIncidentMitreTactic: true });
+        }
+        else if (!this.state.isViewIncidentRisk) {
+            this.setState({ isViewIncidentRisk: true });
+        }      
+
+    }
+
+    //Remove Channel input Control on click of Remove icon
+    private removeCategory(category: string) {
+        if (category === 'product')
+            this.setState({ isViewIncidentProduct: false });
+        if (category === 'mitreTactic')
+            this.setState({ isViewIncidentMitreTactic: false });
+        if (category === 'risk')
+            this.setState({ isViewIncidentRisk: false });
+    }
+
+
     //On click of 'Add Channel' button add a new Channel Input control
     private addChannelInput() {
         const additionalChannels = this.state.incDetailsItem.additionalTeamChannels;
@@ -4241,6 +4222,37 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
                     buttonElement?.setAttribute("aria-label", ariaLabel);
                 }
             }
+
+            const listBoxElementProduct: any = document.getElementById("incident-product-listbox-list")?.children;
+            if (listBoxElementProduct?.length > 0) {
+                for (let i = 0; i < listBoxElement?.length; i++) {
+                    const buttonId = `incident-product-listbox-list${i}`;
+                    const buttonElement: any = document.getElementById(buttonId);
+                    const ariaLabel = `${buttonElement.innerText} ${i + 1} of ${listBoxElement.length}`;
+                    buttonElement?.setAttribute("aria-label", ariaLabel);
+                }
+            }
+
+            const listBoxElementMitreTactic: any = document.getElementById("incident-mitreTactic-listbox-list")?.children;
+            if (listBoxElementMitreTactic?.length > 0) {
+                for (let i = 0; i < listBoxElement?.length; i++) {
+                    const buttonId = `incident-mitreTactic-listbox-list${i}`;
+                    const buttonElement: any = document.getElementById(buttonId);
+                    const ariaLabel = `${buttonElement.innerText} ${i + 1} of ${listBoxElement.length}`;
+                    buttonElement?.setAttribute("aria-label", ariaLabel);
+                }
+            }
+
+            
+            const listBoxElementRisk: any = document.getElementById("incident-risk-listbox-list")?.children;
+            if (listBoxElementRisk?.length > 0) {
+                for (let i = 0; i < listBoxElement?.length; i++) {
+                    const buttonId = `incident-risk-listbox-list${i}`;
+                    const buttonElement: any = document.getElementById(buttonId);
+                    const ariaLabel = `${buttonElement.innerText} ${i + 1} of ${listBoxElement.length}`;
+                    buttonElement?.setAttribute("aria-label", ariaLabel);
+                }
+            }
         }
 
     }
@@ -4401,981 +4413,1216 @@ class IncidentDetails extends React.PureComponent<IIncidentDetailsProps, IIncide
     public render() {
         const isDarkOrContrastTheme = this.props.currentThemeName === constants.darkMode || this.props.currentThemeName === constants.contrastMode;
         return (
-            <div className="incident-details">
-                {this.state.showLoader &&
-                    <div className="loader-bg">
-                        <div className="loaderStyle">
-                            {this.state.loaderMessage === this.props.localeStrings.genericLoaderMessage ?
-                                <Loader label={this.state.loaderMessage} size="largest" />
-                                :
-                                <Loader aria-live="polite" role="alert" label={this.state.loaderMessage} size="largest" />
-                            }
-                        </div>
-                    </div>
-                }
-                <div style={{ opacity: this.state.formOpacity }}>
-                    <div className=".col-xs-12 .col-sm-8 .col-md-4 container" id="incident-details-path">
-                        <label>
-                            <span
-                                onClick={() => this.props.onBackClick("")}
-                                onKeyDown={(event) => {
-                                    if (event.key === constants.enterKey)
-                                        this.props.onBackClick("")
-                                }}
-                                className="go-back">
-                                <ChevronStartIcon id="path-back-icon" />
-                                <span className="back-label" role="button" tabIndex={0} title="Back">{this.props.localeStrings.back}</span>
-                            </span> &nbsp;&nbsp;
-                            <span className="right-border">|</span>
-                            <span>&nbsp;&nbsp;{this.props.localeStrings.formTitle}</span>
-                        </label>
-                    </div>
-                    <div className={`incident-details-form-area${isDarkOrContrastTheme ? " incident-details-form-area-darkcontrast" : ""}`}>
-                        <div className="container">
-                            <h2 aria-live="polite" role="alert">
-                                <div className="incident-form-head-text">
-                                    <h2>
+            <>
+                <div className="incident-details">
+                    <>
+                        {this.state.showLoader &&
+                            <div className="loader-bg">
+                                <div className="loaderStyle">
+                                    {this.state.loaderMessage === this.props.localeStrings.genericLoaderMessage ?
+                                        <Loader label={this.state.loaderMessage} size="largest" />
+                                        :
+                                        <Loader aria-live="polite" role="alert" label={this.state.loaderMessage} size="largest" />
+                                    }
+                                </div>
+                            </div>
+                        }
+                        <div style={{ opacity: this.state.formOpacity }}>
+                            <div className=".col-xs-12 .col-sm-8 .col-md-4 container" id="incident-details-path">
+                                <label>
+                                    <span
+                                        onClick={() => this.props.onBackClick("")}
+                                        onKeyDown={(event) => {
+                                            if (event.key === constants.enterKey)
+                                                this.props.onBackClick("")
+                                        }}
+                                        className="go-back">
+                                        <ChevronStartIcon id="path-back-icon" />
+                                        <span className="back-label" role="button" tabIndex={0} title="Back">{this.props.localeStrings.back}</span>
+                                    </span> &nbsp;&nbsp;
+                                    <span className="right-border">|</span>
+                                    <span>&nbsp;&nbsp;{this.props.localeStrings.formTitle}</span>
+                                </label>
+                            </div>
+                            <div className={`incident-details-form-area${isDarkOrContrastTheme ? " incident-details-form-area-darkcontrast" : ""}`}>
+                                <div className="container">
+                                    <h2 aria-live="polite" role="alert"> <div className="incident-form-head-text">
                                         {!this.props.isEditMode ?
-                                            this.props.localeStrings.formTitle
+                                            <>{this.props.localeStrings.formTitle}</>
                                             :
                                             <>{this.props.localeStrings.formTitleEditMode} - {this.props.incidentData?.incidentId}</>
                                         }
-                                    </h2>
-                                </div>
-                            </h2>
-                            <Row xs={1} sm={1} md={2} lg={2} xl={2} >
-                                <Col xs={12} sm={12} md={8} lg={8} xl={8}>
-                                    <Row xs={1} sm={1} md={2} lg={2} xl={2}>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldIncidentName}</label>
-                                                <TooltipHost
-                                                    content={this.props.localeStrings.infoIncName}
-                                                    calloutProps={calloutProps}
-                                                    hostClassName="tooltip-host-class"
-                                                >
-                                                    <Icon aria-label={this.props.localeStrings.infoIncName} tabIndex={0} role="img" iconName="Info" className="incNameInfoIcon" />
-                                                </TooltipHost>
-                                                <FormInput
-                                                    type="text"
-                                                    ref={this.incidentName}
-                                                    placeholder={this.props.localeStrings.phIncidentName}
-                                                    fluid={true}
-                                                    maxLength={constants.maxCharLengthForSingleLine}
-                                                    aria-label={this.props.localeStrings.fieldIncidentName + constants.requiredAriaLabel}
-                                                    onChange={(evt) => this.onTextInputChange(evt, "incidentName")}
-                                                    value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentName ? this.state.incDetailsItem.incidentName : '') : ''}
-                                                    className="incident-details-input-field"
-                                                    successIndicator={false}
-                                                />
-                                                {this.state.inputValidation.incidentNameHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentNameRequired}</label>
-                                                )}
-                                                {this.state.inputRegexValidation.incidentNameHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentNameRegex}</label>
-                                                )}
-                                            </div>
-                                        </Col>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldIncidentStatus}</label>
-                                                <ComboBox
-                                                    placeholder={this.props.localeStrings.phIncidentStatus}
-                                                    options={this.state.dropdownOptions["statusOptions"] ? this.statusOptions(this.state.dropdownOptions["statusOptions"]) : []}
-                                                    selectedKey={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentStatus ? this.state.incDetailsItem.incidentStatus.id : "") : ""}
-                                                    onChange={this.onIncidentStatusChange}
-                                                    className={"incident-status-dropdown"}
-                                                    useComboBoxAsMenuWidth={true}
-                                                    persistMenu={true}
-                                                    calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
-                                                    ref={this.incidentType}
-                                                    ariaLabel={this.props.localeStrings.fieldIncidentStatus + constants.requiredAriaLabel}
-                                                    id="incident-status-listbox"
-                                                    onMenuOpen={this.onStatusMenuOpen}
-                                                    styles={{
-                                                        optionsContainer: {
-                                                            "button span": {
-                                                                maxHeight: "35px",
-                                                                height: "auto"
-                                                            }
-                                                        }
-                                                    }}
-                                                />
-                                                {this.state.inputValidation.incidentStatusHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.statusRequired}</label>
-                                                )}
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                    <Row xs={1} sm={1} md={2} lg={2} xl={2}>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item" ref={this.incTypeRef}>
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldIncidentType}</label>
-                                                {this.props.isEditMode ?
-                                                    <FormDropdown
-                                                        placeholder={this.props.localeStrings.phIncidentType}
-                                                        fluid={true}
-                                                        value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentType ? this.state.incDetailsItem.incidentType : '') : ''}
-                                                        className={"incident-type-dropdown-disabled"}
-                                                        disabled={true}
-                                                        aria-label={this.props.localeStrings.fieldIncidentType + constants.requiredAriaLabel}
-                                                    />
-                                                    :
-                                                    <ComboBox
-                                                        placeholder={this.props.localeStrings.phIncidentType}
-                                                        options={this.state.dropdownOptions["typeOptions"] ? this.options(this.state.dropdownOptions["typeOptions"]) : []}
-                                                        onChange={this.onIncidentTypeChange}
-                                                        className={"incident-type-dropdown"}
-                                                        useComboBoxAsMenuWidth={true}
-                                                        allowFreeInput={true}
-                                                        persistMenu={true}
-                                                        calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
-                                                        ref={this.incidentType}
-                                                        ariaLabel={this.props.localeStrings.fieldIncidentType + constants.requiredAriaLabel}
-                                                        id="incident-type-listbox"
-                                                        onMenuOpen={this.onMenuOpen}
-                                                        styles={{
-                                                            optionsContainer: {
-                                                                "button span": {
-                                                                    maxHeight: "35px",
-                                                                    height: "auto"
+                                    </div></h2>
+                                    <Row xs={1} sm={1} md={2} lg={2} xl={2} >
+                                        <Col xs={12} sm={12} md={8} lg={8} xl={8}>
+                                            <Row xs={1} sm={1} md={2} lg={2} xl={2}>
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item">
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldIncidentName}</label>
+                                                        <TooltipHost
+                                                            content={this.props.localeStrings.infoIncName}
+                                                            calloutProps={calloutProps}
+                                                            hostClassName="tooltip-host-class"
+                                                        >
+                                                            <Icon aria-label={this.props.localeStrings.infoIncName} tabIndex={0} role="img" iconName="Info" className="incNameInfoIcon" />
+                                                        </TooltipHost>
+                                                        <FormInput
+                                                            type="text"
+                                                            ref={this.incidentName}
+                                                            placeholder={this.props.localeStrings.phIncidentName}
+                                                            fluid={true}
+                                                            maxLength={constants.maxCharLengthForSingleLine}
+                                                            aria-label={this.props.localeStrings.fieldIncidentName + constants.requiredAriaLabel}
+                                                            onChange={(evt) => this.onTextInputChange(evt, "incidentName")}
+                                                            value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentName ? this.state.incDetailsItem.incidentName : '') : ''}
+                                                            className="incident-details-input-field"
+                                                            successIndicator={false}
+                                                        />
+                                                        {this.state.inputValidation.incidentNameHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentNameRequired}</label>
+                                                        )}
+                                                        {this.state.inputRegexValidation.incidentNameHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentNameRegex}</label>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item">
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldIncidentStatus}</label>
+                                                        <ComboBox
+                                                            placeholder={this.props.localeStrings.phIncidentStatus}
+                                                            options={this.state.dropdownOptions["statusOptions"] ? this.statusOptions(this.state.dropdownOptions["statusOptions"]) : []}
+                                                            selectedKey={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentStatus ? this.state.incDetailsItem.incidentStatus.id : "") : ""}
+                                                            onChange={this.onIncidentStatusChange}
+                                                            className={"incident-status-dropdown"}
+                                                            useComboBoxAsMenuWidth={true}
+                                                            persistMenu={true}
+                                                            calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
+                                                            ref={this.incidentType}
+                                                            ariaLabel={this.props.localeStrings.fieldIncidentStatus + constants.requiredAriaLabel}
+                                                            id="incident-status-listbox"
+                                                            onMenuOpen={this.onStatusMenuOpen}
+                                                            styles={{
+                                                                optionsContainer: {
+                                                                    "button span": {
+                                                                        maxHeight: "35px",
+                                                                        height: "auto"
+                                                                    }
                                                                 }
-                                                            }
-                                                        }}
-                                                    />
-                                                }
-                                                {this.state.inputValidation.incidentTypeHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentTypeRequired}</label>
-                                                )}
-                                            </div>
-                                        </Col>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item" ref={this.incCommanderRef}>
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldIncidentCommander}</label>
+                                                            }}
+                                                        />
+                                                        {this.state.inputValidation.incidentStatusHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.statusRequired}</label>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                            </Row>
+                                            <Row xs={1} sm={1} md={2} lg={2} xl={2}>
 
-                                                <TooltipHost
-                                                    content={this.props.localeStrings.infoIncCommander}
-                                                    calloutProps={calloutProps}
-                                                    hostClassName="tooltip-host-class"
-                                                >
-                                                    <Icon aria-label={this.props.localeStrings.infoIncCommander} tabIndex={0} role="img" iconName="Info" className="incCommanderInfoIcon" />
-                                                </TooltipHost>
-                                                <PeoplePicker
-                                                    title={this.props.localeStrings.fieldIncidentCommander}
-                                                    ariaLabel={this.props.localeStrings.fieldIncidentCommander + constants.requiredAriaLabel}
-                                                    selectionMode="single"
-                                                    type={PersonType.person}
-                                                    userType={UserType.user}
-                                                    selectionChanged={this.handleIncCommanderChange}
-                                                    placeholder={this.props.localeStrings.phIncidentCommander}
-                                                    className="incident-details-people-picker"
-                                                    selectedPeople={this.state.selectedIncidentCommander}
-                                                    ref={this.incidentCommandar}
-                                                    onKeyDown={this.setSuggestionsAttributes}
-                                                    onClick={this.setSuggestionsAttributes}
-                                                />
-                                                {this.state.inputValidation.incidentCommandarHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentCommanderRequired}</label>
-                                                )}
-                                                {this.state.incCommanderHasRegexError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsIncCommanderErrorMsg}</label>
-                                                )}
-                                            </div>
-                                        </Col>
-                                    </Row>
-                                    <Row xs={1} sm={1} md={2} lg={2} xl={2}>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldStartDate}</label>
-                                                {(this.props.incidentData && this.props.incidentData.incidentId) ?
-                                                    <FormInput
-                                                        aria-label={this.props.localeStrings.fieldStartDate + constants.requiredAriaLabel}
-                                                        type="text"
-                                                        placeholder={this.props.localeStrings.phStartDate}
-                                                        fluid={true}
-                                                        value={this.state.incDetailsItem.startDateTime ? this.state.incDetailsItem.startDateTime : ''}
-                                                        disabled
-                                                        className="incident-details-input-field-disabled"
-                                                    />
-                                                    :
-                                                    <>
-                                                        <div ref={this.incidentStartDateTime} className="incident-startdatetime">
-                                                            <DatePicker
-                                                                value={this.state.incDetailsItem.startDate ? this.state.incDetailsItem.startDate : new Date()}
-                                                                onSelectDate={this.onChangeStartDate}
-                                                                placeholder="Select a date"
-                                                                ariaLabel={constants.startDateAriaLabel + constants.requiredAriaLabel}
-                                                                className="incident-datepicker"
-                                                                formatDate={this.onFormatDate}
-                                                                calloutProps={{ className: `incidentdatepicker-callout${this.props.currentThemeName === constants.darkMode ? " incidentdatepicker-callout-dark" : `${this.props.currentThemeName === constants.contrastMode ? " incidentdatepicker-callout-contrast" : ""}`}` }}
+                                            {/* incProductList ProductList */}
+                                                {
+                                                    this.state.isViewIncidentProduct === false && this.state.isViewIncidentMitreTactic === false && this.state.isViewIncidentRisk === false ?
+                                                        null :
+                                                          
+                                                    <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+
+                                                        {
+                                                            this.state.isViewIncidentProduct === true ?
+
+                                                                <div className="incident-grid-item" ref={this.incProductRef}>
+                                                                    <label className="FormInput-label">{this.props.localeStrings.fieldProductList}</label>
+                                                                    {
+
+                                                                        this.props.isEditMode ?
+                                                                            this.state.incDetailsItem ?
+                                                                                this.state.incDetailsItem.incidentProduct !== '' ?
+                                                                                    <FormDropdown
+                                                                                        placeholder={this.props.localeStrings.phProductList}
+                                                                                        fluid={true}
+                                                                                        value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentProduct ? this.state.incDetailsItem.incidentProduct : '') : ''}
+                                                                                        className={"incident-type-dropdown-disabled"}
+                                                                                        disabled={true}
+                                                                                        aria-label={this.props.localeStrings.fieldProductList + constants.requiredAriaLabel}
+                                                                                    />
+                                                                                    : null : null
+                                                                            :
+
+
+                                                                            <div className="product-field-with-cancel-icon">
+
+                                                                                <ComboBox
+                                                                                    placeholder={this.props.localeStrings.phProductList}
+                                                                                    options={this.state.dropdownOptions["productOptions"] ? this.options(this.state.dropdownOptions["productOptions"]) : []}
+                                                                                    onChange={this.onIncidentProductChange}
+                                                                                    className={"incident-product-dropdown"}
+                                                                                    useComboBoxAsMenuWidth={true}
+                                                                                    allowFreeInput={true}
+                                                                                    persistMenu={true}
+                                                                                    calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
+                                                                                    ref={this.incidentProduct}
+                                                                                    ariaLabel={this.props.localeStrings.fieldProductList + constants.requiredAriaLabel}
+                                                                                    id="incident-product-listbox"
+                                                                                    onMenuOpen={this.onMenuOpen}
+                                                                                    styles={{
+                                                                                        optionsContainer: {
+                                                                                            "button span": {
+                                                                                                maxHeight: "35px",
+                                                                                                height: "auto"
+                                                                                            }
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                                <span
+                                                                                    className="chnl-remove-icon"
+                                                                                    title={this.props.localeStrings.headerDelete}
+                                                                                    onClick={() => this.removeCategory("product")}
+                                                                                    // onKeyDown={(evt: any) => { if (evt.key === constants.enterKey) this.removeChannelInput(idx) }}
+                                                                                    tabIndex={0}
+                                                                                    role="button"
+                                                                                >
+                                                                                    <Dismiss24Regular />
+                                                                                </span>
+                                                                            </div>
+
+
+                                                                    }
+                                                                    {this.state.inputValidation.incidentProductHasError && (
+                                                                        <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentProductListRequired}</label>
+                                                                    )}
+                                                                </div>
+                                                                : null
+                                                        }
+                                                     </Col>
+
+                                                }
+
+                                                   {/* incMitreTacticList Mitre Tactic */}
+
+                                                {
+                                                    this.state.isViewIncidentMitreTactic === false && this.state.isViewIncidentMitreTactic === false && this.state.isViewIncidentRisk === false ?
+                                                        null :
+                                                          
+                                                    <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+
+                                                        {
+                                                            this.state.isViewIncidentMitreTactic === true ?
+
+                                                                <div className="incident-grid-item" ref={this.incMitreTacticRef}>
+                                                                    <label className="FormInput-label">{this.props.localeStrings.fieldMitreTacticList}</label>
+                                                                    {
+
+                                                                        this.props.isEditMode ?
+                                                                            this.state.incDetailsItem ?
+                                                                                this.state.incDetailsItem.incidentMitreTactic !== '' ?
+                                                                                    <FormDropdown
+                                                                                        placeholder={this.props.localeStrings.phMitreTacticList}
+                                                                                        fluid={true}
+                                                                                        value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentMitreTactic ? this.state.incDetailsItem.incidentMitreTactic : '') : ''}
+                                                                                        className={"incident-type-dropdown-disabled"}
+                                                                                        disabled={true}
+                                                                                        aria-label={this.props.localeStrings.fieldMitreTacticList + constants.requiredAriaLabel}
+                                                                                    />
+                                                                                    : null : null
+                                                                            :
+
+
+                                                                            <div className="mitretactic-field-with-cancel-icon">
+
+                                                                                <ComboBox
+                                                                                    placeholder={this.props.localeStrings.phMitreTacticList}
+                                                                                    options={this.state.dropdownOptions["mitreTacticOptions"] ? this.options(this.state.dropdownOptions["mitreTacticOptions"]) : []}
+                                                                                    onChange={this.onIncidentMitreTacticChange}
+                                                                                    className={"incident-mitretactic-dropdown"}
+                                                                                    useComboBoxAsMenuWidth={true}
+                                                                                    allowFreeInput={true}
+                                                                                    persistMenu={true}
+                                                                                    calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
+                                                                                    ref={this.incidentMitreTactic}
+                                                                                    ariaLabel={this.props.localeStrings.fieldMitreTacticList + constants.requiredAriaLabel}
+                                                                                    id="incident-mitreTactic-listbox"
+                                                                                    onMenuOpen={this.onMenuOpen}
+                                                                                    styles={{
+                                                                                        optionsContainer: {
+                                                                                            "button span": {
+                                                                                                maxHeight: "35px",
+                                                                                                height: "auto"
+                                                                                            }
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                                <span
+                                                                                    className="chnl-remove-icon"
+                                                                                    title={this.props.localeStrings.headerDelete}
+                                                                                    onClick={() => this.removeCategory("mitreTactic")}
+                                                                                    // onKeyDown={(evt: any) => { if (evt.key === constants.enterKey) this.removeChannelInput(idx) }}
+                                                                                    tabIndex={0}
+                                                                                    role="button"
+                                                                                >
+                                                                                    <Dismiss24Regular />
+                                                                                </span>
+                                                                            </div>
+
+
+                                                                    }
+                                                                    {this.state.inputValidation.incidentMitreTacticHasError && (
+                                                                        <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentMitreTacticListRequired}</label>
+                                                                    )}
+                                                                </div>
+                                                                : null
+                                                        }
+                                                     </Col>
+
+                                                }
+
+                                                {/* incRiskList Risk */}
+
+                                                {
+                                                    this.state.isViewIncidentRisk === false && this.state.isViewIncidentRisk === false && this.state.isViewIncidentRisk === false ?
+                                                        null :
+                                                          
+                                                    <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+
+                                                        {
+                                                            this.state.isViewIncidentRisk === true ?
+
+                                                                <div className="incident-grid-item" ref={this.incRiskRef}>
+                                                                    <label className="FormInput-label">{this.props.localeStrings.fieldRiskList}</label>
+                                                                    {
+
+                                                                        this.props.isEditMode ?
+                                                                            this.state.incDetailsItem ?
+                                                                                this.state.incDetailsItem.incidentRisk !== '' ?
+                                                                                    <FormDropdown
+                                                                                        placeholder={this.props.localeStrings.phRiskList}
+                                                                                        fluid={true}
+                                                                                        value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentRisk ? this.state.incDetailsItem.incidentRisk : '') : ''}
+                                                                                        className={"incident-type-dropdown-disabled"}
+                                                                                        disabled={true}
+                                                                                        aria-label={this.props.localeStrings.fieldRiskList + constants.requiredAriaLabel}
+                                                                                    />
+                                                                                    : null : null
+                                                                            :
+
+
+                                                                            <div className="risk-field-with-cancel-icon">
+
+                                                                                <ComboBox
+                                                                                    placeholder={this.props.localeStrings.phRiskList}
+                                                                                    options={this.state.dropdownOptions["riskOptions"] ? this.options(this.state.dropdownOptions["riskOptions"]) : []}
+                                                                                    onChange={this.onIncidentRiskChange}
+                                                                                    className={"incident-risk-dropdown"}
+                                                                                    useComboBoxAsMenuWidth={true}
+                                                                                    allowFreeInput={true}
+                                                                                    persistMenu={true}
+                                                                                    calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
+                                                                                    ref={this.incidentRisk}
+                                                                                    ariaLabel={this.props.localeStrings.fieldRiskList + constants.requiredAriaLabel}
+                                                                                    id="incident-risk-listbox"
+                                                                                    onMenuOpen={this.onMenuOpen}
+                                                                                    styles={{
+                                                                                        optionsContainer: {
+                                                                                            "button span": {
+                                                                                                maxHeight: "35px",
+                                                                                                height: "auto"
+                                                                                            }
+                                                                                        }
+                                                                                    }}
+                                                                                />
+                                                                                <span
+                                                                                    className="chnl-remove-icon"
+                                                                                    title={this.props.localeStrings.headerDelete}
+                                                                                    onClick={() => this.removeCategory("risk")}
+                                                                                    // onKeyDown={(evt: any) => { if (evt.key === constants.enterKey) this.removeChannelInput(idx) }}
+                                                                                    tabIndex={0}
+                                                                                    role="button"
+                                                                                >
+                                                                                    <Dismiss24Regular />
+                                                                                </span>
+                                                                            </div>
+
+
+                                                                    }
+                                                                    {this.state.inputValidation.incidentRiskHasError && (
+                                                                        <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentRiskListRequired}</label>
+                                                                    )}
+                                                                </div>
+                                                                : null
+                                                        }
+                                                     </Col>
+
+                                                }
+
+                                                {
+                                                    !this.props.isEditMode ?                                                
+                                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                            {
+                                                                this.state.isViewIncidentProduct === false || this.state.isViewIncidentMitreTactic === false || this.state.isViewIncidentRisk === false ?
+                                                                <div className="incident-grid-item" style={{marginTop:20}} ref={this.incProductRef}>
+                                                                <Button
+                                                                        icon={<AddIcon />}
+                                                                        content={this.props.localeStrings.addCategoryBtnLabel}
+                                                                        title={this.props.localeStrings.addCategoryBtnLabel}
+                                                                        iconPosition="before"
+                                                                        onClick={() => this.addCategory()}
+                                                                        className="add-chnl-btn"
+                                                                    />
+                                                                    </div>   
+                                                                    : null
+                                                            }
+                                                        </Col> : null
+                                                }
+
+                                            </Row> 
+
+                                            <Row xs={1} sm={1} md={2} lg={2} xl={2}>
+
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item" ref={this.incTypeRef}>
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldIncidentType}</label>
+                                                        {this.props.isEditMode ?
+                                                            <FormDropdown
+                                                                placeholder={this.props.localeStrings.phIncidentType}
+                                                                fluid={true}
+                                                                value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentType ? this.state.incDetailsItem.incidentType : '') : ''}
+                                                                className={"incident-type-dropdown-disabled"}
+                                                                disabled={true}
+                                                                aria-label={this.props.localeStrings.fieldIncidentType + constants.requiredAriaLabel}
                                                             />
-                                                            <TimePicker
-                                                                dateAnchor={this.state.incDetailsItem.startDate}
-                                                                value={this.state.incDetailsItem.startTime ? this.state.incDetailsItem.startTime : new Date()}
-                                                                placeholder="Select a time"
-                                                                onChange={this.onChangeStartTime}
+                                                            :
+                                                            <ComboBox
+                                                                placeholder={this.props.localeStrings.phIncidentType}
+                                                                options={this.state.dropdownOptions["typeOptions"] ? this.options(this.state.dropdownOptions["typeOptions"]) : []}
+                                                                onChange={this.onIncidentTypeChange}
+                                                                className={"incident-type-dropdown"}
+                                                                useComboBoxAsMenuWidth={true}
+                                                                allowFreeInput={true}
+                                                                persistMenu={true}
                                                                 calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
-                                                                ariaLabel={constants.startTimeAriaLabel + constants.requiredAriaLabel}
-                                                                className="incident-timepicker"
+                                                                ref={this.incidentType}
+                                                                ariaLabel={this.props.localeStrings.fieldIncidentType + constants.requiredAriaLabel}
+                                                                id="incident-type-listbox"
+                                                                onMenuOpen={this.onMenuOpen}
                                                                 styles={{
                                                                     optionsContainer: {
                                                                         "button span": {
+                                                                            maxHeight: "35px",
                                                                             height: "auto"
                                                                         }
                                                                     }
                                                                 }}
                                                             />
-                                                        </div>
-                                                        {this.state.inputValidation.incidentStartDateTimeHasError && (
-                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.startDateRequired}</label>
+                                                        }
+                                                        {this.state.inputValidation.incidentTypeHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentTypeRequired}</label>
                                                         )}
-                                                    </>
-                                                }
-                                            </div>
-                                        </Col>
-                                        <Col xs={12} sm={12} md={6} lg={6} xl={6}>
-                                            <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldLocation}</label>
-                                                <TeamsFxContext.Consumer>
-                                                    {(value) =>
-                                                        <LocationPicker
-                                                            onChange={this.onLocationChange}
-                                                            defaultValue={this.state.selectedLocation}
-                                                            className="incident-location-picker"
-                                                            placeholder={this.props.localeStrings.phLocation}
-                                                            appInsights={this.props.appInsights}
-                                                            userPrincipalName={this.props.userPrincipalName}
-                                                            graphBaseUrl={this.props.graphBaseUrl}
-                                                            teamsUserCredential={value.teamsUserCredential!}
+                                                    </div>
+                                                </Col>
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item" ref={this.incCommanderRef}>
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldIncidentCommander}</label>
+
+                                                        <TooltipHost
+                                                            content={this.props.localeStrings.infoIncCommander}
+                                                            calloutProps={calloutProps}
+                                                            hostClassName="tooltip-host-class"
+                                                        >
+                                                            <Icon aria-label={this.props.localeStrings.infoIncCommander} tabIndex={0} role="img" iconName="Info" className="incCommanderInfoIcon" />
+                                                        </TooltipHost>
+                                                        <PeoplePicker
+                                                            title={this.props.localeStrings.fieldIncidentCommander}
+                                                            ariaLabel={this.props.localeStrings.fieldIncidentCommander + constants.requiredAriaLabel}
+                                                            selectionMode="single"
+                                                            type={PersonType.person}
+                                                            userType={UserType.user}
+                                                            selectionChanged={this.handleIncCommanderChange}
+                                                            placeholder={this.props.localeStrings.phIncidentCommander}
+                                                            className="incident-details-people-picker"
+                                                            selectedPeople={this.state.selectedIncidentCommander}
+                                                            ref={this.incidentCommandar}
+                                                            onKeyDown={this.setSuggestionsAttributes}
+                                                            onClick={this.setSuggestionsAttributes}
                                                         />
-                                                    }
-                                                </TeamsFxContext.Consumer>
-                                                {this.state.inputValidation.incidentLocationHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRequired}</label>
-                                                )}
-                                                {this.state.inputRegexValidation.incidentLocationHasError && (
-                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRegex}</label>
+                                                        {this.state.inputValidation.incidentCommandarHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentCommanderRequired}</label>
+                                                        )}
+                                                        {this.state.incCommanderHasRegexError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsIncCommanderErrorMsg}</label>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                            </Row>
+                                            <Row xs={1} sm={1} md={2} lg={2} xl={2}>
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item">
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldStartDate}</label>
+                                                        {(this.props.incidentData && this.props.incidentData.incidentId) ?
+                                                            <FormInput
+                                                                aria-label={this.props.localeStrings.fieldStartDate + constants.requiredAriaLabel}
+                                                                type="text"
+                                                                placeholder={this.props.localeStrings.phStartDate}
+                                                                fluid={true}
+                                                                value={this.state.incDetailsItem.startDateTime ? this.state.incDetailsItem.startDateTime : ''}
+                                                                disabled
+                                                                className="incident-details-input-field-disabled"
+                                                            />
+                                                            :
+                                                            <>
+                                                                <div ref={this.incidentStartDateTime} className="incident-startdatetime">
+                                                                    <DatePicker
+                                                                        value={this.state.incDetailsItem.startDate ? this.state.incDetailsItem.startDate : new Date()}
+                                                                        onSelectDate={this.onChangeStartDate}
+                                                                        placeholder="Select a date"
+                                                                        ariaLabel={constants.startDateAriaLabel + constants.requiredAriaLabel}
+                                                                        className="incident-datepicker"
+                                                                        formatDate={this.onFormatDate}
+                                                                        calloutProps={{ className: `incidentdatepicker-callout${this.props.currentThemeName === constants.darkMode ? " incidentdatepicker-callout-dark" : `${this.props.currentThemeName === constants.contrastMode ? " incidentdatepicker-callout-contrast" : ""}`}` }}
+                                                                    />
+                                                                    <TimePicker
+                                                                        dateAnchor={this.state.incDetailsItem.startDate}
+                                                                        value={this.state.incDetailsItem.startTime ? this.state.incDetailsItem.startTime : new Date()}
+                                                                        placeholder="Select a time"
+                                                                        onChange={this.onChangeStartTime}
+                                                                        calloutProps={{ directionalHintFixed: true, doNotLayer: true }}
+                                                                        ariaLabel={constants.startTimeAriaLabel + constants.requiredAriaLabel}
+                                                                        className="incident-timepicker"
+                                                                        styles={{
+                                                                            optionsContainer: {
+                                                                                "button span": {
+                                                                                    height: "auto"
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                    />
+                                                                </div>
+                                                                {this.state.inputValidation.incidentStartDateTimeHasError && (
+                                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.startDateRequired}</label>
+                                                                )}
+                                                            </>
+                                                        }
+                                                    </div>
+                                                </Col>
+                                                <Col xs={12} sm={12} md={6} lg={6} xl={6}>
+                                                    <div className="incident-grid-item">
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldLocation}</label>
+                                                        <TeamsFxContext.Consumer>
+                                                            {(value) =>
+                                                                <LocationPicker
+                                                                    onChange={this.onLocationChange}
+                                                                    defaultValue={this.state.selectedLocation}
+                                                                    className="incident-location-picker"
+                                                                    placeholder={this.props.localeStrings.phLocation}
+                                                                    appInsights={this.props.appInsights}
+                                                                    userPrincipalName={this.props.userPrincipalName}
+                                                                    graphBaseUrl={this.props.graphBaseUrl}
+                                                                    teamsUserCredential={value.teamsUserCredential!}
+                                                                />
+                                                            }
+                                                        </TeamsFxContext.Consumer>
+                                                        {this.state.inputValidation.incidentLocationHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRequired}</label>
+                                                        )}
+                                                        {this.state.inputRegexValidation.incidentLocationHasError && (
+                                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.locationRegex}</label>
+                                                        )}
+                                                    </div>
+                                                </Col>
+                                            </Row>
+                                        </Col>
+                                        <Col xs={12} sm={12} md={4} lg={4} xl={4}>
+                                            <div className="incident-grid-item">
+                                                <label className="FormInput-label">{this.props.localeStrings.fieldDescription}</label>
+                                                <FormTextArea
+                                                    aria-label={this.props.localeStrings.fieldDescription + constants.requiredAriaLabel}
+                                                    placeholder={this.props.localeStrings.phDescription}
+                                                    fluid={true}
+                                                    maxLength={constants.maxCharLengthForMultiLine}
+                                                    onChange={(evt) => this.onTextInputChange(evt, "incidentDesc")}
+                                                    value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentDesc ? this.state.incDetailsItem.incidentDesc : '') : ''}
+                                                    className="incident-details-description-area"
+                                                    ref={this.incidentDescription}
+                                                />
+                                                {this.state.inputValidation.incidentDescriptionHasError && (
+                                                    <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentDescRequired}</label>
                                                 )}
                                             </div>
                                         </Col>
                                     </Row>
-                                </Col>
-                                <Col xs={12} sm={12} md={4} lg={4} xl={4}>
-                                    <div className="incident-grid-item">
-                                        <label className="FormInput-label">{this.props.localeStrings.fieldDescription}</label>
-                                        <FormTextArea
-                                            aria-label={this.props.localeStrings.fieldDescription + constants.requiredAriaLabel}
-                                            placeholder={this.props.localeStrings.phDescription}
-                                            fluid={true}
-                                            maxLength={constants.maxCharLengthForMultiLine}
-                                            onChange={(evt) => this.onTextInputChange(evt, "incidentDesc")}
-                                            value={this.state.incDetailsItem ? (this.state.incDetailsItem.incidentDesc ? this.state.incDetailsItem.incidentDesc : '') : ''}
-                                            className="incident-details-description-area"
-                                            ref={this.incidentDescription}
-                                        />
-                                        {this.state.inputValidation.incidentDescriptionHasError && (
-                                            <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.incidentDescRequired}</label>
-                                        )}
-                                    </div>
-                                </Col>
-                            </Row>
-                            <Row xs={1} sm={2} md={3}>
-                                <Col md={4} sm={8} xs={12}>
-                                    <div className="incident-grid-item">
-                                        <label className="severity-label">{this.props.localeStrings.fieldSeverity}</label>
-                                        <div className="slider_labels">
-                                            {constants.severity.map((item, index) => {
-                                                return (
-                                                    <div
-                                                        className={index === this.state.selectedSeverity ? "slider_labels-label bold" : "slider_labels-label"}
-                                                        key={index}
-                                                    >
-                                                        {item}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                        <ReactSlider
-                                            className="horizontal-slider"
-                                            marks
-                                            markClassName="example-mark"
-                                            min={0}
-                                            max={3}
-                                            value={this.state.selectedSeverity}
-                                            ariaLabel={this.props.localeStrings.fieldSeverity + constants.severity[this.state.selectedSeverity]}
-                                            thumbActiveClassName="focus-indicator"
-                                            trackClassName="example-track"
-                                            onChange={(index) => this.setState({
-                                                selectedSeverity: index
-                                            })}
-                                            renderMark={(props: any) => {
-                                                if (props.key < this.state.selectedSeverity) {
-                                                    props.className = "example-mark example-mark-completed";
-                                                    props.tabIndex = -1
-                                                } else if (props.key > this.state.selectedSeverity) {
-                                                    props.className = "example-mark example-mark-active";
-                                                    props.tabIndex = -1
-                                                }
-                                                else if (props.key === this.state.selectedSeverity) {
-                                                    props.className = `example-mark ${constants.severity[props.key]}`;
-                                                    props.tabIndex = 0
-                                                }
-                                                return <span aria-label={props.key === this.state.selectedSeverity ? this.props.localeStrings.fieldSeverity + constants.severity[props.key] + constants.selectedAriaLabel : this.props.localeStrings.fieldSeverity + constants.severity[props.key]} {...props} />;
-                                            }}
-                                        />
-                                    </div>
-                                </Col>
-                                {this.props.isEditMode &&
-                                    <Col md={8} sm={8} xs={12}>
-                                        <div className="incident-grid-item">
-                                            <label className="FormInput-label">{this.props.localeStrings.fieldReasonForUpdate}</label>
-                                            <FormTextArea
-                                                aria-label={this.props.localeStrings.fieldReasonForUpdate + constants.requiredAriaLabel}
-                                                placeholder={this.props.localeStrings.phReasonForUpdate}
-                                                fluid={true}
-                                                maxLength={constants.maxCharLengthForMultiLine}
-                                                onChange={(evt) => this.onTextInputChange(evt, "reasonForUpdate")}
-                                                className="incident-details-reason-update-area"
-                                            />
-                                            {this.state.inputValidation.incidentReasonForUpdateHasError && (
-                                                <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.reasonForUpdateRequired}</label>
-                                            )}
-                                        </div>
-                                    </Col>
-                                }
-                            </Row>
-                            <h2><div className="incident-form-head-text">{this.props.localeStrings.headerRoleAssignment}</div></h2>
-                            <Row xs={1} sm={1} md={2}>
-                                <Col md={4} sm={8} xs={12}>
-                                    <div className="incident-grid-item">
-                                        <label className="FormInput-label">{this.props.localeStrings.fieldAdditionalRoles}</label>
-                                        <FormDropdown
-                                            aria-label={this.props.localeStrings.fieldAdditionalRoles + constants.requiredAriaLabel}
-                                            placeholder={this.props.localeStrings.phRoles}
-                                            items={this.state.dropdownOptions ? this.state.dropdownOptions["roleOptions"] : []}
-                                            fluid={true}
-                                            autoSize
-                                            onChange={this.onRoleChange}
-                                            value={this.state.incDetailsItem ? (this.state.incDetailsItem.selectedRole ? this.state.incDetailsItem.selectedRole : '') : ''}
-                                            className={this.state.incDetailsItem && this.state.incDetailsItem.selectedRole ? "select-role-dropdown" : "select-role-placeholder"}
-                                            id="addRole-dropdown"
-                                            aria-labelledby="addRole-dropdown"
-                                        />
-                                    </div>
-                                    {this.state.incDetailsItem.selectedRole && this.state.incDetailsItem.selectedRole.indexOf("New Role") > -1 ?
-                                        <>
+                                    <Row xs={1} sm={2} md={3}>
+                                        <Col md={4} sm={8} xs={12}>
                                             <div className="incident-grid-item">
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldAddRoleName}</label>
-                                                <FormInput
-                                                    aria-label={this.props.localeStrings.fieldAddRoleName + constants.requiredAriaLabel}
-                                                    placeholder={this.props.localeStrings.phAddRoleName}
-                                                    fluid={true}
-                                                    maxLength={constants.maxCharLengthForSingleLine}
-                                                    onChange={(evt) => this.onAddNewRoleChange(evt)}
-                                                    value={this.state.newRoleString}
-                                                    className="incident-details-input-field"
-                                                    successIndicator={false}
-                                                />
-                                            </div>
-                                            <div className="incident-grid-item">
-                                                <Button
-                                                    primary
-                                                    onClick={this.addNewRole}
-                                                    disabled={this.state.isCreateNewRoleBtnDisabled}
-                                                    id={this.state.isCreateNewRoleBtnDisabled ? "manage-role-disabled-btn" : "manage-role-btn"}
-                                                    fluid={!this.state.isDesktop}
-                                                    title={this.props.localeStrings.btnCreateRole}
-                                                >
-                                                    <img src={require("../assets/Images/AddIcon.svg").default}
-                                                        alt="add"
-                                                        className={`manage-role-btn-icon${this.props.currentThemeName === constants.contrastMode ? " add-icon-contrast" : ""}`}
-                                                    />
-                                                    &nbsp;&nbsp;&nbsp;
-                                                    <label className="manage-role-btn-label">{this.props.localeStrings.btnCreateRole}</label>
-                                                </Button>
-                                            </div>
-                                        </>
-                                        :
-                                        <>
-                                            <div className="incident-grid-item" ref={this.normalSearchUserRef}>
-                                                <label className="FormInput-label">{this.props.localeStrings.fieldSearchUser}</label>
-                                                <>{this.iconWithTooltip("info", this.props.localeStrings.roleUserInfoTooltipContent, "role-user-info-icon", "role-user-info-icon-tooltip")}</>
-                                                <PeoplePicker
-                                                    ariaLabel={this.props.localeStrings.fieldSearchUser + constants.requiredAriaLabel}
-                                                    selectionMode="multiple"
-                                                    type={PersonType.any}
-                                                    userType={UserType.any}
-                                                    selectionChanged={this.handleAssignedUserChange}
-                                                    placeholder={this.props.localeStrings.phSearchUser}
-                                                    className="incident-details-people-picker"
-                                                    selectedPeople={this.state.selectedUsers}
-                                                    title={this.props.localeStrings.fieldSearchUser}
-                                                    ref={this.searchUser}
-                                                    onKeyDown={this.setSearchUserAttributes}
-                                                    onClick={this.setSearchUserAttributes}
-                                                />
-                                                {this.state.secIncCommanderUserHasRegexError && (
-                                                    <label className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
-                                                )}
-                                            </div>
-                                            <div className="incident-grid-item" ref={this.normalSearchLeadRef}>
-                                                <label className="lead-people-picker">{this.props.localeStrings.roleLeadLabel}</label>
-                                                <PeoplePicker
-                                                    ariaLabel={this.props.localeStrings.roleLeadLabel}
-                                                    selectionMode="single"
-                                                    type={PersonType.person}
-                                                    userType={UserType.user}
-                                                    selectionChanged={this.handleAssignedLeadChange}
-                                                    placeholder={this.props.localeStrings.phSearchUser}
-                                                    className="incident-details-people-picker"
-                                                    selectedPeople={this.state.selectedLead}
-                                                    title={this.props.localeStrings.roleLeadLabel}
-                                                />
-                                                {this.state.secIncCommanderLeadHasRegexError && (
-                                                    <label className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
-                                                )}
-                                            </div>
-                                            <div className="incident-grid-item">
-                                                <Fluent9CheckBox
-                                                    label={this.props.localeStrings.roleCheckboxTooltip}
-                                                    aria-label={this.props.localeStrings.roleCheckboxTooltip}
-                                                    onChange={(_, data) => this.setState({ saveDefaultRoleCheck: data.checked })}
-                                                    className="role-checkbox"
-                                                    checked={this.state.saveDefaultRoleCheck}
-                                                />
-                                            </div>
-                                            <div className="incident-grid-item">
-                                                <Button
-                                                    primary
-                                                    onClick={this.addRoleAssignment}
-                                                    disabled={this.state.isAddRoleAssignmentBtnDisabled}
-                                                    id={this.state.isAddRoleAssignmentBtnDisabled ? "manage-role-disabled-btn" : "manage-role-btn"}
-                                                    fluid={!this.state.isDesktop}
-                                                    title={this.props.localeStrings.btnAddUser}>
-                                                    <img src={require("../assets/Images/AddIcon.svg").default}
-                                                        alt=""
-                                                        className={`manage-role-btn-icon${this.props.currentThemeName === constants.contrastMode ? " add-icon-contrast" : ""}`}
-                                                    />
-                                                    &nbsp;&nbsp;&nbsp;
-                                                    <label className="manage-role-btn-label">{this.props.localeStrings.btnAddUser}</label>
-                                                </Button>
-                                            </div>
-                                            <div role="status" className="add-role-message" aria-live="polite">{this.state.roleAddSuccessMessage}</div>
-                                        </>
-                                    }
-                                </Col>
-                                <Col md={8} sm={12} xs={12}>
-                                    <Container as="table" className="role-assignment-table">
-                                        <Row as="tr" xs={3} sm={3} md={3} className={`role-grid-thead${isDarkOrContrastTheme ? " table-header-darkcontrast" : ""}`}>
-                                            <Col as="th" md={3} sm={3} xs={3} key={0}>{this.props.localeStrings.headerRole}</Col>
-                                            <Col as="th" md={3} sm={3} xs={3} key={1} className="thead-border-left">{this.props.localeStrings.headerUsers}</Col>
-                                            <Col as="th" md={3} sm={3} xs={3} key={2} className="thead-border-left">{this.props.localeStrings.leadLabel}</Col>
-                                            <Col as="th" md={1} sm={1} xs={1} key={3} className="thead-border-left col-center">
-                                                <PeopleCheckmark24Regular className="role-header-icon" title={this.props.localeStrings.roleCheckboxTooltip} />
-                                            </Col>
-                                            <Col as="th" md={1} sm={1} xs={1} key={4} className="thead-border-left col-center">
-                                                <PeopleEdit24Regular className="role-header-icon" title={this.props.localeStrings.headerEdit} />
-                                            </Col>
-                                            <Col as="th" md={1} sm={1} xs={1} key={5} className="thead-border-left col-center">
-                                                <Delete24Regular title={this.props.localeStrings.headerDelete} className="role-header-icon" />
-                                            </Col>
-                                        </Row>
-                                        {this.state.roleAssignments.map((item, index) => (
-                                            <>
-                                                {this.state.isRoleInEditMode[index] ?
-                                                    <Row as="tr" xs={4} sm={4} md={4} key={"edit-" + item.role} className="role-grid-tbody">
-                                                        <Col as="td" md={10} sm={8} xs={8}>
-                                                            <label className="role-grid-tbody-peoplepicker-label"> {this.props.localeStrings.headerUsers}: </label>
-                                                            <PeoplePicker
-                                                                ariaLabel={this.props.localeStrings.fieldSearchUser}
-                                                                title={this.props.localeStrings.fieldSearchUser}
-                                                                selectionMode="multiple"
-                                                                type={PersonType.person}
-                                                                userType={UserType.user}
-                                                                selectionChanged={(selectedValue) => this.handleAssignedUserChangeInEditMode(selectedValue, index)}
-                                                                placeholder={this.props.localeStrings.phSearchUser}
-                                                                className="incident-details-people-picker"
-                                                                selectedPeople={this.state.selectedUsersInEditMode}
-                                                                tabIndex={0}
-                                                                ref={this.searchUserEditMode}
-                                                                onKeyDown={this.setSearchUserEditModeAttributes}
-                                                                onClick={this.setSearchUserEditModeAttributes}
-                                                            />
-                                                            {this.state.secIncCommanderUserInEditModeHasRegexError && (
-                                                                <>
-                                                                    <label className="error-message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
-                                                                    <br />
-                                                                </>
-                                                            )}
-                                                            <label className="role-grid-tbody-peoplepicker-label"> {this.props.localeStrings.leadLabel}: </label>
-                                                            <PeoplePicker
-                                                                ariaLabel={this.props.localeStrings.roleLeadLabel}
-                                                                title={this.props.localeStrings.roleLeadLabel}
-                                                                selectionMode="single"
-                                                                type={PersonType.person}
-                                                                userType={UserType.user}
-                                                                selectionChanged={(selectedValue) => this.handleAssignedLeadChangeInEditMode(selectedValue, index)}
-                                                                placeholder={this.props.localeStrings.phSearchUser}
-                                                                className="incident-details-people-picker"
-                                                                selectedPeople={this.state.selectedLeadInEditMode}
-                                                                tabIndex={0}
-                                                            />
-                                                            {this.state.secIncCommanderLeadInEditModeHasRegexError && (
-                                                                <label className="error-message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
-                                                            )}
-                                                        </Col>
-                                                        <Col as="td" md={1} sm={2} xs={2} className="editRoleCol">
-                                                            <Save24Regular aria-label="Save"
-                                                                className="role-icon"
-                                                                onClick={(e: any) => this.updateRoleAssignment(index)}
-                                                                onKeyDown={(event: any) => {
-                                                                    if (event.key === constants.enterKey)
-                                                                        this.updateRoleAssignment(index)
-                                                                }}
-                                                                title={this.props.localeStrings.saveIcon}
-                                                                tabIndex={0}
-                                                                role="button"
-                                                            />
-                                                        </Col>
-                                                        <Col as="td" md={1} sm={2} xs={2} className="editRoleCol">
-                                                            <Dismiss24Regular aria-label="Cancel"
-                                                                className="role-icon"
-                                                                onClick={(e: any) => this.exitEditModeForRoles(index)}
-                                                                onKeyDown={(event: any) => {
-                                                                    if (event.key === constants.enterKey)
-                                                                        this.exitEditModeForRoles(index)
-                                                                }}
-                                                                title={this.props.localeStrings.cancelIcon}
-                                                                tabIndex={0}
-                                                                role="button"
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                    :
-                                                    <Row as="tr" xs={3} sm={3} md={3} key={"role-table-" + item.role} className="role-grid-tbody">
-                                                        <Col as="td" md={3} sm={3} xs={3}>{item.role}</Col>
-                                                        <Col as="td" md={3} sm={3} xs={3}>{item.userNamesString}</Col>
-                                                        <Col as="td" md={3} sm={3} xs={3}>{item.leadNameString}</Col>
-                                                        <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-checkbox">
-                                                            <Fluent9CheckBox
-                                                                title={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
-                                                                aria-label={this.props.localeStrings.roleCheckboxTooltip}
-                                                                onChange={(ev, isChecked) => this.onChecked(ev, Boolean(isChecked.checked), index)}
-                                                                defaultChecked={item.saveDefault}
-                                                            />
-                                                        </Col>
-                                                        <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-icons">
-                                                            <PeopleEdit24Regular
-                                                                className="role-icon"
-                                                                onClick={(e: any) => this.editRoleItem(index)}
-                                                                onKeyDown={(event: any) => {
-                                                                    if (event.key === constants.enterKey)
-                                                                        this.editRoleItem(index)
-                                                                }}
-                                                                title={this.props.localeStrings.headerEdit}
-                                                                tabIndex={0}
-                                                                role="button"
-                                                            />
-                                                        </Col>
-                                                        <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-icons">
-                                                            <Delete24Regular
-                                                                className="role-icon"
-                                                                onClick={(e: any) => this.deleteRoleItem(index)}
-                                                                onKeyDown={(event: any) => {
-                                                                    if (event.key === constants.enterKey)
-                                                                        this.deleteRoleItem(index)
-                                                                }}
-
-                                                                title={this.props.localeStrings.headerDelete}
-                                                                tabIndex={0}
-                                                                role="button"
-                                                            />
-                                                        </Col>
-                                                    </Row>
-                                                }
-                                            </>
-                                        ))}
-                                    </Container>
-                                    {this.state.roleAssignments.length > 0 ?
-                                        <div className="role-assignment-table">
-                                            <Fluent9CheckBox
-                                                label={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
-                                                aria-label={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
-                                                onChange={(_ev, isChecked) => this.setState({ saveIncidentTypeDefaultRoleCheck: isChecked.checked })}
-                                                className="assets-save-default-checkbox"
-                                                checked={this.state.saveIncidentTypeDefaultRoleCheck}
-                                            />
-                                        </div>
-                                        : null}
-                                </Col>
-                            </Row>
-                            <div className="incident-form-head-text">{this.props.localeStrings.assetsLabel}</div>
-                            <Row className="inc-assets-wrapper">
-                            {!this.state.isEditMode &&
-                                <Col xl={10} lg={12} className={`${this.state.toggleDefaultTasks ? "cloud-storage-enabled" : ""}`}>
-                                    <div>
-                                        <Toggle
-                                            checked={this.state.toggleDefaultTasks}
-                                            label={<div className="tgle-btn-label">
-                                                {this.props.localeStrings.defaultTasksFieldLabel}
-                                                {this.iconWithTooltip(
-                                                    "Info", //Icon library name
-                                                    this.props.localeStrings.defaultTasksInfoIconTooltipContent,
-                                                    "tgle-btn-info-icon", //Class name
-                                                    "default-tasks-info-tooltip"
-                                                )}
-                                            </div>
-                                            }
-                                            inlineLabel
-                                            onChange={(_, checked: any) => this.setState({ toggleDefaultTasks: checked })}
-                                            className="inc-assets-tgle-btn"
-                                            disabled={this.state.isEditMode ? true : false}
-                                            id="cloud-storage-toggle-btn"
-                                        />
-
-                                    </div>
-                                </Col>
-                            }
-                                <Col xl={10} lg={12} className={`${this.state.toggleCloudStorageLocation ? "cloud-storage-enabled" : ""}`}>
-                                    <div
-                                        className={`cloud-link-asset-field-wrapper${this.state.inputRegexValidation.incidentCloudStorageLinkHasError ||
-                                            this.state.inputValidation.cloudStorageLinkHasError ? " cloud-link-asset-field-with-error-wrapper" : ""}`}
-                                    >
-                                        <Toggle
-                                            checked={this.state.toggleCloudStorageLocation}
-                                            label={this.props.localeStrings.cloudStorageFieldLabel}
-                                            inlineLabel
-                                            onChange={(_, checked: any) => this.onToggleCloudStorageLink(checked)}
-                                            className="inc-assets-tgle-btn"
-                                            disabled={this.state.isEditMode ? true : false}
-                                            id="cloud-storage-toggle-btn"
-                                        />
-                                        {this.state.toggleCloudStorageLocation &&
-                                            <>
-                                                <div className="cloud-field-with-icon">
-                                                    <div className="cloud-storage-field">
-                                                        <FormInput
-                                                            type="text"
-                                                            placeholder={this.props.localeStrings.cloudStorageFieldPlaceholder}
-                                                            fluid={true}
-                                                            onChange={(event: any) => this.onTextInputChange(event, "cloudStorageLink")}
-                                                            value={this.state.incDetailsItem.cloudStorageLink}
-                                                            className={this.state.isEditMode ? "incident-details-input-field disabled-input" : "incident-details-input-field"}
-                                                            successIndicator={false}
-                                                            disabled={this.state.isEditMode}
-                                                        />
-                                                        {this.state.inputRegexValidation.incidentCloudStorageLinkHasError &&
-                                                            <label className="error-message-label">{this.props.localeStrings.cloudStorageFieldRegexMessage}</label>}
-                                                        {this.state.inputValidation.cloudStorageLinkHasError &&
-                                                            <label className="error-message-label">{this.props.localeStrings.cloudStorageFieldErrorMessage}</label>
-                                                        }
-                                                    </div>
-                                                    <span className="cloud-icon-area">
-                                                        <a
-                                                            href={this.dataService.isValidHttpUrl(this.state.incDetailsItem.cloudStorageLink) ?
-                                                                new URL(this.state.incDetailsItem.cloudStorageLink).href : "/"}
-                                                            target="_blank"
-                                                            rel="noreferrer"
-                                                            className={!this.dataService.isValidHttpUrl(this.state.incDetailsItem.cloudStorageLink) ?
-                                                                "disabled-link" : ""}
-                                                            title={this.props.localeStrings.testCloudStorageLocation}
-                                                        >
-                                                            <CloudLink24Regular className="cloud-icon" />
-                                                        </a>
-                                                    </span>
+                                                <label className="severity-label">{this.props.localeStrings.fieldSeverity}</label>
+                                                <div className="slider_labels">
+                                                    {constants.severity.map((item, index) => {
+                                                        return (
+                                                            <div
+                                                                className={index === this.state.selectedSeverity ? "slider_labels-label bold" : "slider_labels-label"}
+                                                                key={index}
+                                                            >
+                                                                {item}
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
-                                                {!this.state.isEditMode &&
-                                                    <Fluent9CheckBox
-                                                        label={<div className={this.state.isEditMode ? "save-default-checkbox-label disabled-label" : "save-default-checkbox-label"}>
-                                                            {this.props.localeStrings.saveDefaultLabel}
-                                                            {this.iconWithTooltip(
-                                                                "Info", //Icon library name
-                                                                this.props.localeStrings.cloudStorageFieldSaveDefaultTooltipContent,
-                                                                "save-default-checkbox-info-icon", //Class name
-                                                                "cloud-storage-save-default-tooltip"
-                                                            )}
-                                                        </div>}
-                                                        aria-label={this.props.localeStrings.saveDefaultLabel}
-                                                        disabled={this.state.isEditMode}
-                                                        className="assets-save-default-checkbox"
-                                                        onChange={(_: any, checked: any) => this.setState({ saveDefaultCloudStorageLink: checked })}
+                                                <ReactSlider
+                                                    className="horizontal-slider"
+                                                    marks
+                                                    markClassName="example-mark"
+                                                    min={0}
+                                                    max={3}
+                                                    value={this.state.selectedSeverity}
+                                                    ariaLabel={this.props.localeStrings.fieldSeverity + constants.severity[this.state.selectedSeverity]}
+                                                    thumbActiveClassName="focus-indicator"
+                                                    trackClassName="example-track"
+                                                    onChange={(index) => this.setState({
+                                                        selectedSeverity: index
+                                                    })}
+                                                    renderMark={(props: any) => {
+                                                        if (props.key < this.state.selectedSeverity) {
+                                                            props.className = "example-mark example-mark-completed";
+                                                            props.tabIndex = -1
+                                                        } else if (props.key > this.state.selectedSeverity) {
+                                                            props.className = "example-mark example-mark-active";
+                                                            props.tabIndex = -1
+                                                        }
+                                                        else if (props.key === this.state.selectedSeverity) {
+                                                            props.className = `example-mark ${constants.severity[props.key]}`;
+                                                            props.tabIndex = 0
+                                                        }
+                                                        return <span aria-label={props.key === this.state.selectedSeverity ? this.props.localeStrings.fieldSeverity + constants.severity[props.key] + constants.selectedAriaLabel : this.props.localeStrings.fieldSeverity + constants.severity[props.key]} {...props} />;
+                                                    }}
+                                                />
+                                            </div>
+                                        </Col>
+                                        {this.props.isEditMode &&
+                                            <Col md={8} sm={8} xs={12}>
+                                                <div className="incident-grid-item">
+                                                    <label className="FormInput-label">{this.props.localeStrings.fieldReasonForUpdate}</label>
+                                                    <FormTextArea
+                                                        aria-label={this.props.localeStrings.fieldReasonForUpdate + constants.requiredAriaLabel}
+                                                        placeholder={this.props.localeStrings.phReasonForUpdate}
+                                                        fluid={true}
+                                                        maxLength={constants.maxCharLengthForMultiLine}
+                                                        onChange={(evt) => this.onTextInputChange(evt, "reasonForUpdate")}
+                                                        className="incident-details-reason-update-area"
                                                     />
-                                                }
-                                            </>
-                                        }
-                                    </div>
-                                </Col>
-                                <Col xl={10} lg={12} className='guest-users-toggle'>
-                                    <div className="inc-assets-field-flex-column">
-                                        <Toggle
-                                            checked={this.state.toggleGuestUsers}
-                                            label={
-                                                <div className="tgle-btn-label">
-                                                    {this.props.localeStrings.guestUsersLabel}
-                                                    {this.iconWithTooltip(
-                                                        "Info", //Icon library name
-                                                        this.props.localeStrings.guestUsersInfoIconTooltipContent,
-                                                        "tgle-btn-info-icon", //Class name
-                                                        "guest-users-info-tooltip"
+                                                    {this.state.inputValidation.incidentReasonForUpdateHasError && (
+                                                        <label aria-live="polite" role="alert" className="message-label">{this.props.localeStrings.reasonForUpdateRequired}</label>
                                                     )}
                                                 </div>
+                                            </Col>
+                                        }
+                                    </Row>
+                                    <h2><div className="incident-form-head-text">{this.props.localeStrings.headerRoleAssignment}</div></h2>
+                                    <Row xs={1} sm={1} md={2}>
+                                        <Col md={4} sm={8} xs={12}>
+                                            <div className="incident-grid-item">
+                                                <label className="FormInput-label">{this.props.localeStrings.fieldAdditionalRoles}</label>
+                                                <FormDropdown
+                                                    aria-label={this.props.localeStrings.fieldAdditionalRoles + constants.requiredAriaLabel}
+                                                    placeholder={this.props.localeStrings.phRoles}
+                                                    items={this.state.dropdownOptions ? this.state.dropdownOptions["roleOptions"] : []}
+                                                    fluid={true}
+                                                    autoSize
+                                                    onChange={this.onRoleChange}
+                                                    value={this.state.incDetailsItem ? (this.state.incDetailsItem.selectedRole ? this.state.incDetailsItem.selectedRole : '') : ''}
+                                                    className={this.state.incDetailsItem && this.state.incDetailsItem.selectedRole ? "select-role-dropdown" : "select-role-placeholder"}
+                                                    id="addRole-dropdown"
+                                                    aria-labelledby="addRole-dropdown"
+                                                />
+                                            </div>
+                                            {this.state.incDetailsItem.selectedRole && this.state.incDetailsItem.selectedRole.indexOf("New Role") > -1 ?
+                                                <>
+                                                    <div className="incident-grid-item">
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldAddRoleName}</label>
+                                                        <FormInput
+                                                            aria-label={this.props.localeStrings.fieldAddRoleName + constants.requiredAriaLabel}
+                                                            placeholder={this.props.localeStrings.phAddRoleName}
+                                                            fluid={true}
+                                                            maxLength={constants.maxCharLengthForSingleLine}
+                                                            onChange={(evt) => this.onAddNewRoleChange(evt)}
+                                                            value={this.state.newRoleString}
+                                                            className="incident-details-input-field"
+                                                            successIndicator={false}
+                                                        />
+                                                    </div>
+                                                    <div className="incident-grid-item">
+                                                        <Button
+                                                            primary
+                                                            onClick={this.addNewRole}
+                                                            disabled={this.state.isCreateNewRoleBtnDisabled}
+                                                            id={this.state.isCreateNewRoleBtnDisabled ? "manage-role-disabled-btn" : "manage-role-btn"}
+                                                            fluid={!this.state.isDesktop}
+                                                            title={this.props.localeStrings.btnCreateRole}
+                                                        >
+                                                            <img src={require("../assets/Images/AddIcon.svg").default}
+                                                                alt="add"
+                                                                className={`manage-role-btn-icon${this.props.currentThemeName === constants.contrastMode ? " add-icon-contrast" : ""}`}
+                                                            />
+                                                            &nbsp;&nbsp;&nbsp;
+                                                            <label className="manage-role-btn-label">{this.props.localeStrings.btnCreateRole}</label>
+                                                        </Button>
+                                                    </div>
+                                                </>
+                                                :
+                                                <>
+                                                    <div className="incident-grid-item" ref={this.normalSearchUserRef}>
+                                                        <label className="FormInput-label">{this.props.localeStrings.fieldSearchUser}</label>
+                                                        <>{this.iconWithTooltip("info", this.props.localeStrings.roleUserInfoTooltipContent, "role-user-info-icon", "role-user-info-icon-tooltip")}</>
+                                                        <PeoplePicker
+                                                            ariaLabel={this.props.localeStrings.fieldSearchUser + constants.requiredAriaLabel}
+                                                            selectionMode="multiple"
+                                                            type={PersonType.person}
+                                                            userType={UserType.user}
+                                                            selectionChanged={this.handleAssignedUserChange}
+                                                            placeholder={this.props.localeStrings.phSearchUser}
+                                                            className="incident-details-people-picker"
+                                                            selectedPeople={this.state.selectedUsers}
+                                                            title={this.props.localeStrings.fieldSearchUser}
+                                                            ref={this.searchUser}
+                                                            onKeyDown={this.setSearchUserAttributes}
+                                                            onClick={this.setSearchUserAttributes}
+                                                        />
+                                                        {this.state.secIncCommanderUserHasRegexError && (
+                                                            <label className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
+                                                        )}
+                                                    </div>
+                                                    <div className="incident-grid-item" ref={this.normalSearchLeadRef}>
+                                                        <label className="lead-people-picker">{this.props.localeStrings.roleLeadLabel}</label>
+                                                        <PeoplePicker
+                                                            ariaLabel={this.props.localeStrings.roleLeadLabel}
+                                                            selectionMode="single"
+                                                            type={PersonType.person}
+                                                            userType={UserType.user}
+                                                            selectionChanged={this.handleAssignedLeadChange}
+                                                            placeholder={this.props.localeStrings.phSearchUser}
+                                                            className="incident-details-people-picker"
+                                                            selectedPeople={this.state.selectedLead}
+                                                            title={this.props.localeStrings.roleLeadLabel}
+                                                        />
+                                                        {this.state.secIncCommanderLeadHasRegexError && (
+                                                            <label className="message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
+                                                        )}
+                                                    </div>
+                                                    <div className="incident-grid-item">
+                                                        <Fluent9CheckBox
+                                                            label={this.props.localeStrings.roleCheckboxTooltip}
+                                                            aria-label={this.props.localeStrings.roleCheckboxTooltip}
+                                                            onChange={(_, data) => this.setState({ saveDefaultRoleCheck: data.checked })}
+                                                            className="role-checkbox"
+                                                            checked={this.state.saveDefaultRoleCheck}
+                                                        />
+                                                    </div>
+                                                    <div className="incident-grid-item">
+                                                        <Button
+                                                            primary
+                                                            onClick={this.addRoleAssignment}
+                                                            disabled={this.state.isAddRoleAssignmentBtnDisabled}
+                                                            id={this.state.isAddRoleAssignmentBtnDisabled ? "manage-role-disabled-btn" : "manage-role-btn"}
+                                                            fluid={!this.state.isDesktop}
+                                                            title={this.props.localeStrings.btnAddUser}>
+                                                            <img src={require("../assets/Images/AddIcon.svg").default}
+                                                                alt=""
+                                                                className={`manage-role-btn-icon${this.props.currentThemeName === constants.contrastMode ? " add-icon-contrast" : ""}`}
+                                                            />
+                                                            &nbsp;&nbsp;&nbsp;
+                                                            <label className="manage-role-btn-label">{this.props.localeStrings.btnAddUser}</label>
+                                                        </Button>
+                                                    </div>
+                                                    <div role="status" className="add-role-message" aria-live="polite">{this.state.roleAddSuccessMessage}</div>
+                                                </>
                                             }
-                                            inlineLabel
-                                            onChange={(_, checked: any) => this.onToggleGuestUsers(checked)}
-                                            className="inc-assets-tgle-btn"
-                                        />
-                                        {this.state.toggleGuestUsers &&
-                                            <div className="guest-user-fields-wrapper">
-                                                {this.state.incDetailsItem.guestUsers.map((user: IGuestUsers, idx: number) => {
-                                                    return (
-                                                        <div className="guest-field-wrapper" key={"guest-user-field-row-" + idx}>
-                                                            <div>
-                                                                <FormInput
-                                                                    type="text"
-                                                                    label={this.props.localeStrings.emailIdLabel}
-                                                                    aria-label={this.props.localeStrings.emailIdLabel}
-                                                                    placeholder={this.props.localeStrings.guestEmailIdPlaceholder}
-                                                                    fluid={true}
-                                                                    maxLength={254}
-                                                                    onChange={(_, value) => this.updateGuestUser(value, idx, "email")}
-                                                                    value={user.email}
-                                                                    className="incident-details-input-field"
-                                                                    successIndicator={false}
-                                                                    required={true}
-                                                                />
-                                                                {user.hasEmailValidationError && <label className="error-message-label">
-                                                                    {this.props.localeStrings.guestemailIdValidationError}
-                                                                </label>}
-                                                                {user.hasEmailRegexError && <label className="error-message-label">
-                                                                    {this.props.localeStrings.guestEmailIdRegexError}
-                                                                </label>}
-                                                            </div>
-                                                            <div>
-                                                                <FormInput
-                                                                    type="text"
-                                                                    label={this.props.localeStrings.displayNameLabel}
-                                                                    placeholder={this.props.localeStrings.guestDisplayNamePlaceholder}
-                                                                    fluid={true}
-                                                                    maxLength={200}
-                                                                    onChange={(_, value) => this.updateGuestUser(value, idx, "displayName")}
-                                                                    value={user.displayName}
-                                                                    className="incident-details-input-field"
-                                                                    successIndicator={false}
-                                                                    required={true}
-                                                                />
-                                                                {user.hasDisplayNameValidationError && <label className="error-message-label">
-                                                                    {this.props.localeStrings.guestDisplayNameValidationError}
-                                                                </label>}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                                {this.state.incDetailsItem.guestUsers.length < 10 &&
-                                                    <Button
-                                                        icon={<AddIcon />}
-                                                        content={this.props.localeStrings.addMoreBtnLabel}
-                                                        iconPosition="before"
-                                                        onClick={() => this.addGuestUserInput()}
-                                                        className="add-chnl-btn"
-                                                        title={this.props.localeStrings.addMoreBtnLabel}
+                                        </Col>
+                                        <Col md={8} sm={12} xs={12}>
+                                            <Container as="table" className="role-assignment-table">
+                                                <Row as="tr" xs={3} sm={3} md={3} className={`role-grid-thead${isDarkOrContrastTheme ? " table-header-darkcontrast" : ""}`}>
+                                                    <Col as="th" md={3} sm={3} xs={3} key={0}>{this.props.localeStrings.headerRole}</Col>
+                                                    <Col as="th" md={3} sm={3} xs={3} key={1} className="thead-border-left">{this.props.localeStrings.headerUsers}</Col>
+                                                    <Col as="th" md={3} sm={3} xs={3} key={2} className="thead-border-left">{this.props.localeStrings.leadLabel}</Col>
+                                                    <Col as="th" md={1} sm={1} xs={1} key={3} className="thead-border-left col-center">
+                                                        <PeopleCheckmark24Regular className="role-header-icon" title={this.props.localeStrings.roleCheckboxTooltip} />
+                                                    </Col>
+                                                    <Col as="th" md={1} sm={1} xs={1} key={4} className="thead-border-left col-center">
+                                                        <PeopleEdit24Regular className="role-header-icon" title={this.props.localeStrings.headerEdit} />
+                                                    </Col>
+                                                    <Col as="th" md={1} sm={1} xs={1} key={5} className="thead-border-left col-center">
+                                                        <Delete24Regular title={this.props.localeStrings.headerDelete} className="role-header-icon" />
+                                                    </Col>
+                                                </Row>
+                                                {this.state.roleAssignments.map((item, index) => (
+                                                    <>
+                                                        {this.state.isRoleInEditMode[index] ?
+                                                            <>
+                                                                <Row as="tr" xs={4} sm={4} md={4} key={"edit-" + item.role} className="role-grid-tbody">
+                                                                    <Col as="td" md={10} sm={8} xs={8}>
+                                                                        <label className="role-grid-tbody-peoplepicker-label"> {this.props.localeStrings.headerUsers}: </label>
+                                                                        <PeoplePicker
+                                                                            ariaLabel={this.props.localeStrings.fieldSearchUser}
+                                                                            title={this.props.localeStrings.fieldSearchUser}
+                                                                            selectionMode="multiple"
+                                                                            type={PersonType.person}
+                                                                            userType={UserType.user}
+                                                                            selectionChanged={(selectedValue) => this.handleAssignedUserChangeInEditMode(selectedValue, index)}
+                                                                            placeholder={this.props.localeStrings.phSearchUser}
+                                                                            className="incident-details-people-picker"
+                                                                            selectedPeople={this.state.selectedUsersInEditMode}
+                                                                            tabIndex={0}
+                                                                            ref={this.searchUserEditMode}
+                                                                            onKeyDown={this.setSearchUserEditModeAttributes}
+                                                                            onClick={this.setSearchUserEditModeAttributes}
+                                                                        />
+                                                                        {this.state.secIncCommanderUserInEditModeHasRegexError && (
+                                                                            <>
+                                                                                <label className="error-message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
+                                                                                <br />
+                                                                            </>
+                                                                        )}
+                                                                        <label className="role-grid-tbody-peoplepicker-label"> {this.props.localeStrings.leadLabel}: </label>
+                                                                        <PeoplePicker
+                                                                            ariaLabel={this.props.localeStrings.roleLeadLabel}
+                                                                            title={this.props.localeStrings.roleLeadLabel}
+                                                                            selectionMode="single"
+                                                                            type={PersonType.person}
+                                                                            userType={UserType.user}
+                                                                            selectionChanged={(selectedValue) => this.handleAssignedLeadChangeInEditMode(selectedValue, index)}
+                                                                            placeholder={this.props.localeStrings.phSearchUser}
+                                                                            className="incident-details-people-picker"
+                                                                            selectedPeople={this.state.selectedLeadInEditMode}
+                                                                            tabIndex={0}
+                                                                        />
+                                                                        {this.state.secIncCommanderLeadInEditModeHasRegexError && (
+                                                                            <label className="error-message-label">{this.props.localeStrings.guestUsersNotAllowedAsSecIncCommanderErrorMsg}</label>
+                                                                        )}
+                                                                    </Col>
+                                                                    <Col as="td" md={1} sm={2} xs={2} className="editRoleCol">
+                                                                        <Save24Regular aria-label="Save"
+                                                                            className="role-icon"
+                                                                            onClick={(e: any) => this.updateRoleAssignment(index)}
+                                                                            onKeyDown={(event: any) => {
+                                                                                if (event.key === constants.enterKey)
+                                                                                    this.updateRoleAssignment(index)
+                                                                            }}
+                                                                            title={this.props.localeStrings.saveIcon}
+                                                                            tabIndex={0}
+                                                                            role="button"
+                                                                        />
+                                                                    </Col>
+                                                                    <Col as="td" md={1} sm={2} xs={2} className="editRoleCol">
+                                                                        <Dismiss24Regular aria-label="Cancel"
+                                                                            className="role-icon"
+                                                                            onClick={(e: any) => this.exitEditModeForRoles(index)}
+                                                                            onKeyDown={(event: any) => {
+                                                                                if (event.key === constants.enterKey)
+                                                                                    this.exitEditModeForRoles(index)
+                                                                            }}
+                                                                            title={this.props.localeStrings.cancelIcon}
+                                                                            tabIndex={0}
+                                                                            role="button"
+                                                                        />
+                                                                    </Col>
+                                                                </Row>
+                                                            </>
+                                                            :
+                                                            <Row as="tr" xs={3} sm={3} md={3} key={"role-table-" + item.role} className="role-grid-tbody">
+                                                                <Col as="td" md={3} sm={3} xs={3}>{item.role}</Col>
+                                                                <Col as="td" md={3} sm={3} xs={3}>{item.userNamesString}</Col>
+                                                                <Col as="td" md={3} sm={3} xs={3}>{item.leadNameString}</Col>
+                                                                <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-checkbox">
+                                                                    <Fluent9CheckBox
+                                                                        title={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
+                                                                        aria-label={this.props.localeStrings.roleCheckboxTooltip}
+                                                                        onChange={(ev, isChecked) => this.onChecked(ev, Boolean(isChecked.checked), index)}
+                                                                        defaultChecked={item.saveDefault}
+                                                                    />
+                                                                </Col>
+                                                                <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-icons">
+                                                                    <PeopleEdit24Regular
+                                                                        className="role-icon"
+                                                                        onClick={(e: any) => this.editRoleItem(index)}
+                                                                        onKeyDown={(event: any) => {
+                                                                            if (event.key === constants.enterKey)
+                                                                                this.editRoleItem(index)
+                                                                        }}
+                                                                        title={this.props.localeStrings.headerEdit}
+                                                                        tabIndex={0}
+                                                                        role="button"
+                                                                    />
+                                                                </Col>
+                                                                <Col as="td" md={1} sm={1} xs={1} className="col-center role-body-icons">
+                                                                    <Delete24Regular
+                                                                        className="role-icon"
+                                                                        onClick={(e: any) => this.deleteRoleItem(index)}
+                                                                        onKeyDown={(event: any) => {
+                                                                            if (event.key === constants.enterKey)
+                                                                                this.deleteRoleItem(index)
+                                                                        }}
+
+                                                                        title={this.props.localeStrings.headerDelete}
+                                                                        tabIndex={0}
+                                                                        role="button"
+                                                                    />
+                                                                </Col>
+                                                            </Row>
+                                                        }
+                                                    </>
+                                                ))}
+                                            </Container>
+                                            {this.state.roleAssignments.length > 0 ?
+                                                <div className="role-assignment-table">
+                                                    <Fluent9CheckBox
+                                                        label={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
+                                                        aria-label={this.props.localeStrings.incidentTypeDefaultRoleCheckboxLabel}
+                                                        onChange={(_ev, isChecked) => this.setState({ saveIncidentTypeDefaultRoleCheck: isChecked.checked })}
+                                                        className="assets-save-default-checkbox"
+                                                        checked={this.state.saveIncidentTypeDefaultRoleCheck}
                                                     />
-                                                }
-                                                {
-                                                    this.state.inputValidation.guestUsersHasError &&
-                                                    <label className="error-message-label">
-                                                        {this.props.localeStrings.guestUsersValidationError}
-                                                    </label>
+                                                </div>
+                                                : null}
+                                        </Col>
+                                    </Row>
+                                    <div className="incident-form-head-text">{this.props.localeStrings.assetsLabel}</div>
+                                    <Row className="inc-assets-wrapper">
+                                        <Col xl={10} lg={12} className={`${this.state.toggleCloudStorageLocation ? "cloud-storage-enabled" : ""}`}>
+                                            <div
+                                                className={`cloud-link-asset-field-wrapper${this.state.inputRegexValidation.incidentCloudStorageLinkHasError ||
+                                                    this.state.inputValidation.cloudStorageLinkHasError ? " cloud-link-asset-field-with-error-wrapper" : ""}`}
+                                            >
+                                                <Toggle
+                                                    checked={this.state.toggleCloudStorageLocation}
+                                                    label={this.props.localeStrings.cloudStorageFieldLabel}
+                                                    inlineLabel
+                                                    onChange={(_, checked: any) => this.onToggleCloudStorageLink(checked)}
+                                                    className="inc-assets-tgle-btn"
+                                                    disabled={this.state.isEditMode ? true : false}
+                                                    id="cloud-storage-toggle-btn"
+                                                />
+                                                {this.state.toggleCloudStorageLocation &&
+                                                    <>
+                                                        <div className="cloud-field-with-icon">
+                                                            <div className="cloud-storage-field">
+                                                                <FormInput
+                                                                    type="text"
+                                                                    placeholder={this.props.localeStrings.cloudStorageFieldPlaceholder}
+                                                                    fluid={true}
+                                                                    onChange={(event: any) => this.onTextInputChange(event, "cloudStorageLink")}
+                                                                    value={this.state.incDetailsItem.cloudStorageLink}
+                                                                    className={this.state.isEditMode ? "incident-details-input-field disabled-input" : "incident-details-input-field"}
+                                                                    successIndicator={false}
+                                                                    disabled={this.state.isEditMode}
+                                                                />
+                                                                {this.state.inputRegexValidation.incidentCloudStorageLinkHasError &&
+                                                                    <label className="error-message-label">{this.props.localeStrings.cloudStorageFieldRegexMessage}</label>}
+                                                                {this.state.inputValidation.cloudStorageLinkHasError &&
+                                                                    <label className="error-message-label">{this.props.localeStrings.cloudStorageFieldErrorMessage}</label>
+                                                                }
+                                                            </div>
+                                                            <span className="cloud-icon-area">
+                                                                <a
+                                                                    href={this.dataService.isValidHttpUrl(this.state.incDetailsItem.cloudStorageLink) ?
+                                                                        new URL(this.state.incDetailsItem.cloudStorageLink).href : "/"}
+                                                                    target="_blank"
+                                                                    rel="noreferrer"
+                                                                    className={!this.dataService.isValidHttpUrl(this.state.incDetailsItem.cloudStorageLink) ?
+                                                                        "disabled-link" : ""}
+                                                                    title={this.props.localeStrings.testCloudStorageLocation}
+                                                                >
+                                                                    <CloudLink24Regular className="cloud-icon" />
+                                                                </a>
+                                                            </span>
+                                                        </div>
+                                                        {!this.state.isEditMode &&
+                                                            <Fluent9CheckBox
+                                                                label={<div className={this.state.isEditMode ? "save-default-checkbox-label disabled-label" : "save-default-checkbox-label"}>
+                                                                    {this.props.localeStrings.saveDefaultLabel}
+                                                                    {this.iconWithTooltip(
+                                                                        "Info", //Icon library name
+                                                                        this.props.localeStrings.cloudStorageFieldSaveDefaultTooltipContent,
+                                                                        "save-default-checkbox-info-icon", //Class name
+                                                                        "cloud-storage-save-default-tooltip"
+                                                                    )}
+                                                                </div>}
+                                                                aria-label={this.props.localeStrings.saveDefaultLabel}
+                                                                disabled={this.state.isEditMode}
+                                                                className="assets-save-default-checkbox"
+                                                                onChange={(_: any, checked: any) => this.setState({ saveDefaultCloudStorageLink: checked })}
+                                                            />
+                                                        }
+                                                    </>
                                                 }
                                             </div>
-                                        }
-                                    </div>
-                                </Col>
-                                {!this.state.isEditMode &&
-                                    <Col xl={10} lg={12} className="additional-channels-toggle">
-                                        <div className="inc-assets-field-flex-column">
-                                            <div className="additional-chnls-label">
+                                        </Col>
+                                        <Col xl={10} lg={12} className='guest-users-toggle'>
+                                            <div className="inc-assets-field-flex-column">
                                                 <Toggle
-                                                    checked={this.state.toggleAdditionalChannels}
+                                                    checked={this.state.toggleGuestUsers}
                                                     label={
                                                         <div className="tgle-btn-label">
-                                                            {this.props.localeStrings.additionalChannelsFieldLabel}
+                                                            {this.props.localeStrings.guestUsersLabel}
                                                             {this.iconWithTooltip(
                                                                 "Info", //Icon library name
-                                                                this.props.localeStrings.additionalChannelsFieldInfoIconTooltipContent,
+                                                                this.props.localeStrings.guestUsersInfoIconTooltipContent,
                                                                 "tgle-btn-info-icon", //Class name
-                                                                "additional-channels-info-tooltip"
+                                                                "guest-users-info-tooltip"
                                                             )}
                                                         </div>
                                                     }
                                                     inlineLabel
-                                                    onChange={(_, checked: any) => this.onToggleAdditionChannels(checked)}
+                                                    onChange={(_, checked: any) => this.onToggleGuestUsers(checked)}
                                                     className="inc-assets-tgle-btn"
-                                                    tabIndex={0}
                                                 />
-                                                <Fluent9CheckBox
-                                                    label={<div className="save-default-checkbox-label">
-                                                        {this.props.localeStrings.saveDefaultLabel}
-                                                        {this.iconWithTooltip(
-                                                            "Info", //Icon library name
-                                                            this.props.localeStrings.additionalChannelsFieldSaveDefaultTooltipContent,
-                                                            "save-default-checkbox-info-icon", //Class name
-                                                            "additional-channels-save-default-tooltip"
-                                                        )}
-                                                    </div>}
-                                                    aria-label={this.props.localeStrings.saveDefaultLabel}
-                                                    onChange={(_: any, checked: any) => this.setState({ saveDefaultAdditionalChannels: checked })}
-                                                    className="assets-save-default-checkbox"
-                                                />
-                                            </div>
-                                            {this.state.toggleAdditionalChannels &&
-                                                <div className="additional-chnl-fields">
-                                                    {this.state.incDetailsItem.additionalTeamChannels.map((channel: IAdditionalTeamChannels,
-                                                        idx: number) => {
-                                                        return (
-                                                            <div key={`${channel.channelName}${idx}`} className={`chnl-field-combobox-wrapper${channel.hasRegexError ? " field-has-error" : ""}`}>
-                                                                <div className='field-with-error-msg-wrapper'>
-                                                                    <div className="field-with-cancel-icon">
+                                                {this.state.toggleGuestUsers &&
+                                                    <div className="guest-user-fields-wrapper">
+                                                        {this.state.incDetailsItem.guestUsers.map((user: IGuestUsers, idx: number) => {
+                                                            return (
+                                                                <div className="guest-field-wrapper" key={"guest-user-field-row-" + idx}>
+                                                                    <div>
                                                                         <FormInput
                                                                             type="text"
-                                                                            placeholder={this.props.localeStrings.additionalChannelsFieldPlaceholder}
+                                                                            label={this.props.localeStrings.emailIdLabel}
+                                                                            aria-label={this.props.localeStrings.emailIdLabel}
+                                                                            placeholder={this.props.localeStrings.guestEmailIdPlaceholder}
                                                                             fluid={true}
-                                                                            maxLength={constants.maxCharLengthForSingleLine}
-                                                                            onChange={(eve, value) => this.updateAdditionalChannel(eve, value, idx)}
-                                                                            value={channel.channelName}
+                                                                            maxLength={254}
+                                                                            onChange={(_, value) => this.updateGuestUser(value, idx, "email")}
+                                                                            value={user.email}
                                                                             className="incident-details-input-field"
+                                                                            successIndicator={false}
+                                                                            required={true}
                                                                         />
-                                                                        <span
-                                                                            className="chnl-remove-icon"
-                                                                            title={this.props.localeStrings.headerDelete}
-                                                                            onClick={() => this.removeChannelInput(idx)}
-                                                                            onKeyDown={(evt: any) => { if (evt.key === constants.enterKey) this.removeChannelInput(idx) }}
-                                                                            tabIndex={0}
-                                                                            role="button"
-                                                                        >
-                                                                            <Dismiss24Regular />
-                                                                        </span>
+                                                                        {user.hasEmailValidationError && <label className="error-message-label">
+                                                                            {this.props.localeStrings.guestemailIdValidationError}
+                                                                        </label>}
+                                                                        {user.hasEmailRegexError && <label className="error-message-label">
+                                                                            {this.props.localeStrings.guestEmailIdRegexError}
+                                                                        </label>}
                                                                     </div>
-                                                                    {channel.hasRegexError &&
-                                                                        <label className="error-message-label">
-                                                                            {channel.regexErrorMessage}
-                                                                        </label>
-                                                                    }
+                                                                    <div>
+                                                                        <FormInput
+                                                                            type="text"
+                                                                            label={this.props.localeStrings.displayNameLabel}
+                                                                            placeholder={this.props.localeStrings.guestDisplayNamePlaceholder}
+                                                                            fluid={true}
+                                                                            maxLength={200}
+                                                                            onChange={(_, value) => this.updateGuestUser(value, idx, "displayName")}
+                                                                            value={user.displayName}
+                                                                            className="incident-details-input-field"
+                                                                            successIndicator={false}
+                                                                            required={true}
+                                                                        />
+                                                                        {user.hasDisplayNameValidationError && <label className="error-message-label">
+                                                                            {this.props.localeStrings.guestDisplayNameValidationError}
+                                                                        </label>}
+                                                                    </div>
                                                                 </div>
-                                                                <Fluent9CheckBox
-                                                                    label={this.props.localeStrings.privateLabel}
-                                                                    aria-label={this.props.localeStrings.privateLabel}
-                                                                    checked={this.state.incDetailsItem.additionalTeamChannels[idx].channelType === constants.privateChannel}
-                                                                    onChange={(eve: any, { checked }: any) => this.onPrivateChanged(eve, checked, idx)}
-                                                                    className="assets-private-channel-checkbox"
-                                                                />
-                                                                {this.state.incDetailsItem.additionalTeamChannels[idx].channelType === constants.privateChannel &&
-                                                                    <Fluent9Combobox
-                                                                        className="private-channel-role-combobox"
-                                                                        multiselect={true}
-                                                                        positioning="after"
-                                                                        inlinePopup={true}
-                                                                        placeholder={this.props.localeStrings.privateChannelPlaceholder}
-                                                                        value={this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers ? this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers : ""}
-                                                                        title={this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers}
-                                                                        onOptionSelect={(eve: any, data: any) => this.onRolesSelect(eve, data, idx)}
-                                                                        listbox={{ id: "private-channel-role-listbox" }}
-                                                                        disabled={this.state.roleAssignments.length === 0}
-                                                                    >
-                                                                        <div aria-live="polite" role="alert" className="private-channel-callout-note">
-                                                                            <b>{this.props.localeStrings.NoteLabel}: </b>
-                                                                            {this.props.localeStrings.privateChannelCalloutNote}
-                                                                        </div>
-                                                                        {this.state.roleAssignments?.map((option: any) => {
-                                                                            return (
-                                                                                option.role !== constants.secondaryIncidentCommanderRole ?
-                                                                                    <>
-                                                                                        <Option
-                                                                                            checkIcon={this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] ? <ChevronDown16Regular /> : <ChevronRight16Regular />}
-                                                                                            value={option.role}
-                                                                                            className="role-option-header"
-                                                                                            aria-roledescription='group header'
-                                                                                            role="menuitem"
-                                                                                            aria-expanded={this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role]}
-                                                                                        >
-                                                                                            {option.role}
-                                                                                        </Option>
-                                                                                        {this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] && option.userDetailsObj?.map((user: any) => (
-                                                                                            <Option value={user.userName + "|" + user.userId + "|" + user.userEmail + "|{}"} aria-label={option.role + " " + user.userName}>{user.userName}</Option>
-                                                                                        ))}
-                                                                                        {this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] && option.leadDetailsObj?.map((lead: any) => (
-                                                                                            <Option value={lead.userName + "|" + lead.userId + "|" + lead.userEmail + "|{}"} aria-label={option.role + " " + lead.userName}>{lead.userName}</Option>
-                                                                                        ))}
-                                                                                    </> : <></>
-                                                                            );
-                                                                        })}
-                                                                    </Fluent9Combobox>
-                                                                }
-                                                            </div>
-                                                        );
-                                                    })}
-                                                    {this.state.incDetailsItem.additionalTeamChannels.length < 5 &&
-                                                        <Button
-                                                            icon={<AddIcon />}
-                                                            content={this.props.localeStrings.addChannelBtnLabel}
-                                                            title={this.props.localeStrings.addChannelBtnLabel}
-                                                            iconPosition="before"
-                                                            onClick={() => this.addChannelInput()}
-                                                            className="add-chnl-btn"
+                                                            );
+                                                        })}
+                                                        {this.state.incDetailsItem.guestUsers.length < 10 &&
+                                                            <Button
+                                                                icon={<AddIcon />}
+                                                                content={this.props.localeStrings.addMoreBtnLabel}
+                                                                iconPosition="before"
+                                                                onClick={() => this.addGuestUserInput()}
+                                                                className="add-chnl-btn"
+                                                                title={this.props.localeStrings.addMoreBtnLabel}
+                                                            />
+                                                        }
+                                                        {
+                                                            this.state.inputValidation.guestUsersHasError &&
+                                                            <label className="error-message-label">
+                                                                {this.props.localeStrings.guestUsersValidationError}
+                                                            </label>
+                                                        }
+                                                    </div>
+                                                }
+                                            </div>
+                                        </Col>
+                                        {!this.state.isEditMode &&
+                                            <Col xl={10} lg={12} className="additional-channels-toggle">
+                                                <div className="inc-assets-field-flex-column">
+                                                    <div className="additional-chnls-label">
+                                                        <Toggle
+                                                            checked={this.state.toggleAdditionalChannels}
+                                                            label={
+                                                                <div className="tgle-btn-label">
+                                                                    {this.props.localeStrings.additionalChannelsFieldLabel}
+                                                                    {this.iconWithTooltip(
+                                                                        "Info", //Icon library name
+                                                                        this.props.localeStrings.additionalChannelsFieldInfoIconTooltipContent,
+                                                                        "tgle-btn-info-icon", //Class name
+                                                                        "additional-channels-info-tooltip"
+                                                                    )}
+                                                                </div>
+                                                            }
+                                                            inlineLabel
+                                                            onChange={(_, checked: any) => this.onToggleAdditionChannels(checked)}
+                                                            className="inc-assets-tgle-btn"
+                                                            tabIndex={0}
                                                         />
+                                                        <Fluent9CheckBox
+                                                            label={<div className="save-default-checkbox-label">
+                                                                {this.props.localeStrings.saveDefaultLabel}
+                                                                {this.iconWithTooltip(
+                                                                    "Info", //Icon library name
+                                                                    this.props.localeStrings.additionalChannelsFieldSaveDefaultTooltipContent,
+                                                                    "save-default-checkbox-info-icon", //Class name
+                                                                    "additional-channels-save-default-tooltip"
+                                                                )}
+                                                            </div>}
+                                                            aria-label={this.props.localeStrings.saveDefaultLabel}
+                                                            onChange={(_: any, checked: any) => this.setState({ saveDefaultAdditionalChannels: checked })}
+                                                            className="assets-save-default-checkbox"
+                                                        />
+                                                    </div>
+                                                    {this.state.toggleAdditionalChannels &&
+                                                        <div className="additional-chnl-fields">
+                                                            {this.state.incDetailsItem.additionalTeamChannels.map((channel: IAdditionalTeamChannels,
+                                                                idx: number) => {
+                                                                return (
+                                                                    <div className={`chnl-field-combobox-wrapper${channel.hasRegexError ? " field-has-error" : ""}`}>
+                                                                        <div className='field-with-error-msg-wrapper'>
+                                                                            <div className="field-with-cancel-icon">
+                                                                                <FormInput
+                                                                                    type="text"
+                                                                                    placeholder={this.props.localeStrings.additionalChannelsFieldPlaceholder}
+                                                                                    fluid={true}
+                                                                                    maxLength={constants.maxCharLengthForSingleLine}
+                                                                                    onChange={(eve, value) => this.updateAdditionalChannel(eve, value, idx)}
+                                                                                    value={channel.channelName}
+                                                                                    className="incident-details-input-field"
+                                                                                />
+                                                                                <span
+                                                                                    className="chnl-remove-icon"
+                                                                                    title={this.props.localeStrings.headerDelete}
+                                                                                    onClick={() => this.removeChannelInput(idx)}
+                                                                                    onKeyDown={(evt: any) => { if (evt.key === constants.enterKey) this.removeChannelInput(idx) }}
+                                                                                    tabIndex={0}
+                                                                                    role="button"
+                                                                                >
+                                                                                    <Dismiss24Regular />
+                                                                                </span>
+                                                                            </div>
+                                                                            {channel.hasRegexError &&
+                                                                                <label className="error-message-label">
+                                                                                    {channel.regexErrorMessage}
+                                                                                </label>
+                                                                            }
+                                                                        </div>
+                                                                        <Fluent9CheckBox
+                                                                            label={this.props.localeStrings.privateLabel}
+                                                                            aria-label={this.props.localeStrings.privateLabel}
+                                                                            checked={this.state.incDetailsItem.additionalTeamChannels[idx].channelType === constants.privateChannel}
+                                                                            onChange={(eve: any, { checked }: any) => this.onPrivateChanged(eve, checked, idx)}
+                                                                            className="assets-private-channel-checkbox"
+                                                                        />
+                                                                        {this.state.incDetailsItem.additionalTeamChannels[idx].channelType === constants.privateChannel &&
+                                                                            <Fluent9Combobox
+                                                                                className="private-channel-role-combobox"
+                                                                                multiselect={true}
+                                                                                positioning="after"
+                                                                                inlinePopup={true}
+                                                                                placeholder={this.props.localeStrings.privateChannelPlaceholder}
+                                                                                value={this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers ? this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers : ""}
+                                                                                title={this.state.incDetailsItem.additionalTeamChannels[idx].selectedRoleUsers}
+                                                                                onOptionSelect={(eve: any, data: any) => this.onRolesSelect(eve, data, idx)}
+                                                                                listbox={{ id: "private-channel-role-listbox" }}
+                                                                                disabled={this.state.roleAssignments.length === 0}
+                                                                            >
+                                                                                <div aria-live="polite" role="alert" className="private-channel-callout-note">
+                                                                                    <b>{this.props.localeStrings.NoteLabel}: </b>
+                                                                                    {this.props.localeStrings.privateChannelCalloutNote}
+                                                                                </div>
+                                                                                {this.state.roleAssignments?.map((option: any) => {
+                                                                                    return (
+                                                                                        option.role !== constants.secondaryIncidentCommanderRole ?
+                                                                                            <>
+                                                                                                <Option
+                                                                                                    checkIcon={this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] ? <ChevronDown16Regular /> : <ChevronRight16Regular />}
+                                                                                                    value={option.role}
+                                                                                                    className="role-option-header"
+                                                                                                    aria-roledescription='group header'
+                                                                                                    role="menuitem"
+                                                                                                    aria-expanded={this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role]}
+                                                                                                >
+                                                                                                    {option.role}
+                                                                                                </Option>
+                                                                                                {this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] && option.userDetailsObj?.map((user: any) => (
+                                                                                                    <Option value={user.userName + "|" + user.userId + "|" + user.userEmail + "|{}"} aria-label={option.role + " " + user.userName}>{user.userName}</Option>
+                                                                                                ))}
+                                                                                                {this.state.incDetailsItem.additionalTeamChannels[idx]?.expandedGroups[option.role] && option.leadDetailsObj?.map((lead: any) => (
+                                                                                                    <Option value={lead.userName + "|" + lead.userId + "|" + lead.userEmail + "|{}"} aria-label={option.role + " " + lead.userName}>{lead.userName}</Option>
+                                                                                                ))}
+                                                                                            </> : <></>
+                                                                                    );
+                                                                                })}
+                                                                            </Fluent9Combobox>
+                                                                        }
+                                                                    </div>
+                                                                );
+                                                            })}
+                                                            {this.state.incDetailsItem.additionalTeamChannels.length < 5 &&
+                                                                <Button
+                                                                    icon={<AddIcon />}
+                                                                    content={this.props.localeStrings.addChannelBtnLabel}
+                                                                    title={this.props.localeStrings.addChannelBtnLabel}
+                                                                    iconPosition="before"
+                                                                    onClick={() => this.addChannelInput()}
+                                                                    className="add-chnl-btn"
+                                                                />
+                                                            }
+                                                        </div>
                                                     }
                                                 </div>
-                                            }
-                                        </div>
-                                    </Col>
-                                }
-                            </Row>
-                            <br />
-                            <Row xs={1} sm={1} md={1}>
-                                <Col md={12} sm={12} xs={12}>
-                                    <div className="new-incident-btn-area">
-                                        <Flex hAlign="end" gap="gap.large" wrap={true}>
-                                            <Button
-                                                onClick={() => this.props.onBackClick("")}
-                                                className="new-incident-back-btn"
-                                                fluid={true}
-                                                title={this.props.localeStrings.btnBack}
-                                            >
-                                                <ChevronStartIcon /> &nbsp;
-                                                <label>{this.props.localeStrings.btnBack}</label>
-                                            </Button>
-                                            {this.props.isEditMode ?
-                                                <Button
-                                                    primary
-                                                    onClick={this.updateIncidentDetails}
-                                                    fluid={true}
-                                                    className={`new-incident-create-btn${this.props.currentThemeName === constants.contrastMode ? " create-icon-contrast" : ""}`}
+                                            </Col>
+                                        }
+                                    </Row>
+                                    <br />
+                                    <Row xs={1} sm={1} md={1}>
+                                        <Col md={12} sm={12} xs={12}>
+                                            <div className="new-incident-btn-area">
+                                                <Flex hAlign="end" gap="gap.large" wrap={true}>
+                                                    <Button
+                                                        onClick={() => this.props.onBackClick("")}
+                                                        className="new-incident-back-btn"
+                                                        fluid={true}
+                                                        title={this.props.localeStrings.btnBack}
+                                                    >
+                                                        <ChevronStartIcon /> &nbsp;
+                                                        <label>{this.props.localeStrings.btnBack}</label>
+                                                    </Button>
+                                                    {this.props.isEditMode ?
+                                                        <Button
+                                                            primary
+                                                            onClick={this.updateIncidentDetails}
+                                                            fluid={true}
+                                                            className={`new-incident-create-btn${this.props.currentThemeName === constants.contrastMode ? " create-icon-contrast" : ""}`}
 
-                                                    title={this.props.localeStrings.btnUpdateIncident}
-                                                >
-                                                    <img src={require("../assets/Images/ButtonEditIcon.svg").default} alt="" /> &nbsp;
-                                                    <label>{this.props.localeStrings.btnUpdateIncident}</label>
-                                                </Button>
-                                                :
-                                                <Button
-                                                    primary
-                                                    onClick={this.createNewIncident}
-                                                    fluid={true}
-                                                    className={`new-incident-create-btn${this.props.currentThemeName === constants.contrastMode ? " create-icon-contrast" : ""}`}
+                                                            title={this.props.localeStrings.btnUpdateIncident}
+                                                        >
+                                                            <img src={require("../assets/Images/ButtonEditIcon.svg").default} alt="" /> &nbsp;
+                                                            <label>{this.props.localeStrings.btnUpdateIncident}</label>
+                                                        </Button>
+                                                        :
+                                                        <Button
+                                                            primary
+                                                            onClick={this.createNewIncident}
+                                                            fluid={true}
+                                                            className={`new-incident-create-btn${this.props.currentThemeName === constants.contrastMode ? " create-icon-contrast" : ""}`}
 
-                                                    title={this.props.localeStrings.btnCreateIncident}
-                                                >
-                                                    <img src={require("../assets/Images/ButtonEditIcon.svg").default} alt="" /> &nbsp;
-                                                    <label>{this.props.localeStrings.btnCreateIncident}</label>
-                                                </Button>
-                                            }
-                                        </Flex>
-                                    </div>
-                                </Col>
-                            </Row>
+                                                            title={this.props.localeStrings.btnCreateIncident}
+                                                        >
+                                                            <img src={require("../assets/Images/ButtonEditIcon.svg").default} alt="" /> &nbsp;
+                                                            <label>{this.props.localeStrings.btnCreateIncident}</label>
+                                                        </Button>
+                                                    }
+                                                </Flex>
+                                            </div>
+                                        </Col>
+                                    </Row>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    </>
                 </div>
-            </div>
+            </>
         );
     }
 }

@@ -2,14 +2,16 @@
     "incidentsList": "TEOC-IncidentTransaction",
     "assessmentsList": "TEOC-Assessments",
     "incStatusList": "TEOC-IncidentStatus",
-    "incTypeList": "TEOC-IncidentType",
+    "incTypeList": "SI-IncidentType", 
     "roleAssignmentList": "TEOC-RoleAssignments",
     "configurationList": "TEOC-Config",
     "roleDefaultList": "TEOC-RoleDefaultValues",
     "incidentTypeDefaultRolesList": "TEOC-IncidentTypeDefaultRoles",
     "userRolesList": "TEOC-UserRoles",
-    "appTitle": "Microsoft Teams Emergency Operations Center",
-    "defaulTasksList": "TEOC-Tasks",
+    "appTitle": "Security Incident Emergency Operations Center",
+    "incProductList": "SI-ProductType",
+    "incMitreTacticList":"SIMitreTacticType",
+    "incRiskList":"SIRiskType",  
     "lists": [
         {
             "listName": "TEOC-Assessments",
@@ -102,3 +104,4 @@
         }
     ]
 }
+

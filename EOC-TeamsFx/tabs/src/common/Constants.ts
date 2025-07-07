@@ -1,6 +1,6 @@
 export const defaultGraphBaseURL = "https://graph.microsoft.com/"
 export const commercialGraphContextURL = "https://graph.microsoft.com/v1.0/"
-export const AppVersion = "3.4.0 ";
+export const AppVersion = "3.2.0 ";
 export const EOCAppName = "MIFTEOC";
 export const all = "All";
 export const planning = "Planning";
@@ -11,7 +11,7 @@ export const mobileWidth = 568;
 export const maxCharacterLength = 50;
 export const maxCharLengthForSingleLine = 50;
 export const maxCharLengthForMultiLine = 500;
-export const teamEOCPrefix = "TEOC";
+export const teamEOCPrefix = "SIRC";//"TEOC";
 export const messageBarType = {
     "error": "error",
     "success": "success"
@@ -32,7 +32,6 @@ export const secondaryIncidentCommanderRole = "Secondary Incident Commander";
 export const newRole = "New Role (Specify a new role to be created and assign users to)";
 export const yes = "Yes";
 export const no = "No";
-export const ownerLimitPerTeams = 100;
 
 //EOC Header 
 
@@ -52,7 +51,7 @@ export const componentNames = {
     EOCHomeComponent: 'EOCHome',
     DashboardComponent: 'Dashboard',
     IncidentDetailsComponent: 'IncidentDetails',
-    UpdateIncidentComponent: 'UpdateIncident',
+    UpdateIncidentCompoent: 'UpdateIncident',
     TeamNameConfiguration: 'TeamNameConfiguration',
     IncidentHistoryComponent: 'IncidentHistory',
     TasksComponent: "Tasks",
@@ -60,8 +59,7 @@ export const componentNames = {
     BridgeComponent: "Bridge",
     AdminSettingsComponent: "AdminSettings",
     ConfigSettingsComponent: "ConfigSettings",
-    MapViewer:"MapViewer",
-    RoleSettingsComponent: "RoleSettings"
+    MapViewer:"MapViewer"
 }
 
 export const severity = ["Low", "Medium", "High", "Critical"]
@@ -74,7 +72,12 @@ export const teamNameConfigConstants = {
     Prefix: "Prefix",
     PrefixValue: "PrefixValue",
     StartDate: "StartDate",
-    DontInclude: "Don't Include"
+    DontInclude: "Don't Include",
+
+    //incProductList ProductList
+    IncidentProduct: "IncidentProduct",
+    IncidentMitreTactic: "IncidentMitreTactic",
+    IncidentRisk: "IncidentRisk",
 }
 
 export const defaultChannelConstants = {
@@ -131,7 +134,7 @@ export const selectedAriaLabel = " Selected";
 //Config Settings
 export const appTitleKey = "AppTitle";
 export const enableRoles = "EnableRoles";
-export const azureMapsKey = "AzureMapsKey";
+export const bingMapsKey = "BingMapsKey";
 export const teamNameConfig = "TeamNameConfig";
 export const editIncidentAccessRoleKey = "EditIncidentAccessRole";
 export const noneOption = "None";
@@ -150,4 +153,3 @@ export const authorizationRequestDenied = "Authorization_RequestDenied";
 
 //Exception Messages
 export const groupCreationAccessDeniedErrorMessage = "Tenant admin has not enabled Unified Group creation.";
-export const ownerLimitReachedErrorMessage = "this team has the maximum number of owners.";

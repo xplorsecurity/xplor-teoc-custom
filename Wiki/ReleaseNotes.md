@@ -3,8 +3,6 @@ This page contains the release information for Microsoft Teams Emergency Operati
 ## Version history
 | Version | Release Date |
 |----|----|
-| 3.4 | Mar 27, 2025 |
-| 3.3 | Nov 15, 2024 |
 | 3.2 | Sep 23, 2024 |
 | 3.1 | Jun 6, 2024 |
 | 3.0 | Feb 23, 2024 |
@@ -14,22 +12,6 @@ This page contains the release information for Microsoft Teams Emergency Operati
 | 0.5 | Mar 31, 2022 |
 
 ## Release notes
-
-### v3.4 (Mar 27, 2025)
-
-Below are the changes released with this version:
-
-- New Feature: Dashboard restricts the visibility of the incidents as per the current user. A user can see only the incidents that they are part of. 
-- New Feature: Ability to add M365 groups under roles while creating an incident. However, the recommendation is to use M365 groups with not more than 200 users due to few limitations.  
-- New Feature: Ability to select additional planner buckets while creating tasks from Active Dashboard.
-- New Feature: Ability to configure and create default tasks while creating the incident depending on the selected Incident Type   
-- Minor accessibility improvements
-
-### v3.3 (Nov 15, 2024)
-
-Below are the changes released with this version:
-
-- New Feature: "Bings Maps" replaced with "Azure Maps" in "Map Viewer" component. Since Bing Maps is deprecated, even customers who already had Bing Maps configured in TEOC need to replace it with Azure Maps as per "Enable Map Viewer" section in the "Solution Overview" wiki.
 
 ### v3.2 (Sep 23, 2024)
 

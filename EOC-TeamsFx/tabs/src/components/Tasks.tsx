@@ -81,11 +81,9 @@ export default class PlannerTasks extends React.Component<PlannerTasksProps, Pla
                     while (isPlanCreated === false && maxPlanCreationAttempt > 0) {
                         try {
 
-                            const result = await this.commonService.createPlannerPlan(teamGroupId, incidentId, this.props.graph,
+                            plannerPlanId = await this.commonService.createPlannerPlan(teamGroupId, incidentId, this.props.graph,
                                 this.props.graphContextURL, this.props.tenantID, "", true);
-                            
-                            plannerPlanId = result?.planId
-                                //Set state variable for Plan ID
+                            //Set state variable for Plan ID
                             this.setState({
                                 planID: plannerPlanId
                             });

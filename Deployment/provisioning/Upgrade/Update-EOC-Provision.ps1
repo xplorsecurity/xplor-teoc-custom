@@ -45,10 +45,9 @@ try {
   Invoke-PnPSiteTemplate -Path $FilePath -ErrorAction Stop -WarningAction SilentlyContinue
           
   Write-Host "TEOC App Upgrade complete."
-  pause
 }
 catch {
+
   Write-Host "`nError Message: " $_.Exception.Message
   Write-Host "`nTEOC App Upgrade failed."
-  pause
 }

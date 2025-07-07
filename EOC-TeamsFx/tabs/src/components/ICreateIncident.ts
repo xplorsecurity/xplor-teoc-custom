@@ -5,6 +5,9 @@ export interface IIncidentEntity {
     incidentStatus: IIncidentStatus;
     location: string;
     incidentType: string;
+    incidentProduct: string; //inc Product
+    incidentMitreTactic: string;
+    incidentRisk: string;
     incidentDesc: string;
     startDateTime: string;
     startDate: Date;
@@ -26,6 +29,10 @@ export class IncidentEntity implements IIncidentEntity {
     public incidentName!: string;
     public incidentStatus!: IIncidentStatus;
     public location!: string;
+   
+    public incidentProduct!: string; //incProductList ProductList
+    public incidentMitreTactic!: string;
+    public incidentRisk!: string;
     public incidentType!: string;
     public incidentDesc!: string;
     public startDateTime!: string;
@@ -166,6 +173,11 @@ export interface IInputValidationStates {
     incidentStatusHasError: boolean;
     incidentLocationHasError: boolean;
     incidentTypeHasError: boolean;
+
+    incidentProductHasError: boolean;//incProductList ProductList
+    incidentMitreTacticHasError: boolean;
+    incidentRiskHasError: boolean;
+    
     incidentDescriptionHasError: boolean;
     incidentStartDateTimeHasError: boolean;
     incidentCommandarHasError: boolean;

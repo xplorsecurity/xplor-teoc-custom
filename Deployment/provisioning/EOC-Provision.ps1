@@ -3,10 +3,15 @@
     [string]$SiteName,
     [string]$ClientID)
 
-$FilePath = Read-Host "Enter site template XML schema file path";
-$FilePath = $FilePath.Trim();
+#$FilePath = Read-Host "Enter site template XML schema file path";
+$FilePath ="D:\Projects\People\Daniel\Source\Security Incident Response Command\Security-Incident-System\Deployment\provisioning\EOC-SiteTemplate.xml"; # $FilePath.Trim();
 
 Write-Host $FilePath
+$TenantName = "csiroc"
+$AdminEmail = "mohammad@csiroc.com"
+$SiteName="SecurityIncidentResponseCommand"
+
+$ClientID = "9f0df8f7-7840-4f70-9b29-29586a358fcc"
 
 if (($TenantName -eq "") -or ($null -eq $TenantName)) {
     $TenantName = Read-Host "Enter tenant name: (contoso)";
@@ -79,10 +84,8 @@ try {
     Invoke-PnPSiteTemplate -Path $FilePath -ErrorAction Stop -WarningAction SilentlyContinue
           
     Write-Host "App Provision complete."
-    pause
 }
 catch {
     Write-Host "`nError Message: " $_.Exception.Message
     Write-Host "`nApp Provisioning failed."
-    pause
 }
